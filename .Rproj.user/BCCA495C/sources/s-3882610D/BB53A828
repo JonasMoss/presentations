@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1520328241121.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "BB53A828",
+    "lastKnownWriteTime" : 1520328986,
+    "last_content_update" : 1520328986735,
+    "path" : "~/Desktop/presentations/2018-03-07-HMC/2018-03-07-HMC.Rpres",
+    "project_path" : "2018-03-07-HMC/2018-03-07-HMC.Rpres",
+    "properties" : {
+        "cursorPosition" : "6,15",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_presentation"
+}
