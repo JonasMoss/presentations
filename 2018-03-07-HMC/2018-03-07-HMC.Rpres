@@ -183,6 +183,7 @@ lines(x, 2*dchisq(-2*x, 2), col = "red")
 
 Euler's method 
 ===============================================================================
+Light and simple differential equation solver. 
 \[
 \begin{array}{ccc}
 p_{i}\left(t+\epsilon\right) & = & p_{i}\left(t\right)+\epsilon\frac{dp_{i}}{dt}\left(t\right)\\
@@ -190,6 +191,7 @@ q_{i}\left(t+\epsilon\right) & = & p_{i}\left(t\right)+\epsilon\frac{dq_{i}}{dt}
 \end{array}
 \]
 
+For Hamiltonian dynamics:
 \[
 \begin{array}{ccc}
 p_{i}\left(t+\epsilon\right) & = & p_{i}\left(t\right)-\epsilon\frac{dU}{dq_{i}}\left(t\right)\\
@@ -197,25 +199,146 @@ q_{i}\left(t+\epsilon\right) & = & q_{i}\left(t\right)+\epsilon\frac{dK}{dp_{i}}
 \end{array}
 \]
 
-Geometric integrators
+Euler's method is unacceptable!
 ===============================================================================
-Find out something about these: Also symplectic. Big field of study in its own
-right.
+```{r, echo = FALSE}
+a = 0
+q0 = sqrt(2)/2
+p0 = sqrt(2)/2
+r = sqrt(p0^2 + q0^2)
+
+p = function(t) r*cos(a + t)
+q = function(t) -r*sin(a + t)
+
+eps = 0.1
+n = 100
+ps = rep(0, n + 1)
+ps[1] = p0
+qs = rep(0, n + 1)
+qs[1] = q0
+
+t = 0
+for(i in 1:n) {
+  ps[i + 1] = ps[i] - eps*qs[i]
+  qs[i + 1] = qs[i] + eps*ps[i] 
+  t = t + eps
+}
+
+t = seq(0, 2*pi, by = 0.01)
+plot(r*cos(a + t), -r*sin(a + t), type = "l", bty = "l", xlab = "q", 
+     ylab = "p", main = paste0("Energy set (r = ", r, "; eps = ", eps,
+                               "; n = ", n, ")"), 
+     xlim = c(-2, 2),
+     ylim = c(-2, 2))
+points(qs, ps, type = "b")
+```  
 
 The Leapfrog
 ===============================================================================
-Describe the method
 
-Performance of Leapfrog
+A *symplectic integrator*. Known as the velocity vervlet.
+\[
+\begin{eqnarray*}
+p_{i}\left(t+\frac{\epsilon}{2}\right) & = & p_{i}\left(t\right)-\frac{\epsilon}{2}\frac{dU}{dq_{i}}\left(q_{i}\left(t\right)\right)\\
+q_{i}\left(t+\epsilon\right) & = & q_{i}\left(t\right)+\epsilon\frac{dK}{dp_{i}}\left(p_{i}\left(t+\frac{\epsilon}{2}\right)\right)\\
+p_{i}\left(t+\epsilon\right) & = & p_{i}\left(t+\frac{\epsilon}{2}\right)-\epsilon\frac{dU}{dq_{i}}\left(q_{i}\left(t+\epsilon\right)\right)
+\end{eqnarray*}
+\]
+
+Some Motivation
 ===============================================================================
-Show the performance on normal
+* Euler: $y(t+\epsilon) = y(t) + \epsilon f(y(t))$; based on $g'(x)
+  \approx \frac{1}{\epsilon}(g(x + \epsilon) - g(x))$ 
+* Numerical differentation of the form 
+  $\frac{1}{\epsilon}(g(x + \epsilon) - g(x))$ approximates the derivative at 
+  the midpoint: $g'(x + \frac{1}{2}\epsilon)$ Think about the words 
+  "Intermediate Value Theorem".
+* Hence $y(t+\epsilon) = y(t) + \epsilon f(y(t + \epsilon/2))$ should be more
+  accurate. (And it is!) This method is called midpoint Euler (MAT-INF1100).
+* Using this reasoning on the Hamiltonian system yields the leapfrog.
+
+Performance of Leapfrog (eps = 1)
+===============================================================================
+```{r, echo = FALSE}
+a = 0
+q0 = sqrt(2)/2
+p0 = sqrt(2)/2
+r = sqrt(p0^2 + q0^2)
+
+p = function(t) r*cos(a + t)
+q = function(t) -r*sin(a + t)
+
+eps = 1
+n = 90
+ps = rep(0, n + 1)
+ps[1] = p0
+qs = rep(0, n + 1)
+qs[1] = q0
+
+t = 0
+for(i in 1:n) {
+  p_temp = ps[i] - eps/2*qs[i]
+  qs[i + 1] = qs[i] + eps*p_temp 
+  ps[i + 1] = p_temp - eps/2*qs[i + 1]
+  t = t + eps
+}
+
+t = seq(0, 2*pi, by = 0.01)
+plot(r*cos(a + t), -r*sin(a + t), type = "l", bty = "l", xlab = "q", 
+     ylab = "p", main = paste0("Energy set (r = ", r, "; eps = ", eps,
+                               "; n = ", n, ")"), 
+     xlim = c(-2, 2),
+     ylim = c(-2, 2))
+points(qs, ps, type = "b")
+```  
+
+Performance of Leapfrog (eps = 0.1)
+===============================================================================
+```{r, echo = FALSE}
+a = 0
+q0 = sqrt(2)/2
+p0 = sqrt(2)/2
+r = sqrt(p0^2 + q0^2)
+
+p = function(t) r*cos(a + t)
+q = function(t) -r*sin(a + t)
+
+eps = 0.1
+n = 60
+ps = rep(0, n + 1)
+ps[1] = p0
+qs = rep(0, n + 1)
+qs[1] = q0
+
+t = 0
+for(i in 1:n) {
+  p_temp = ps[i] - eps/2*qs[i]
+  qs[i + 1] = qs[i] + eps*p_temp 
+  ps[i + 1] = p_temp - eps/2*qs[i + 1]
+  t = t + eps
+}
+
+t = seq(0, 2*pi, by = 0.01)
+plot(r*cos(a + t), -r*sin(a + t), type = "l", bty = "l", xlab = "q", 
+     ylab = "p", main = paste0("Energy set (r = ", r, "; eps = ", eps,
+                               "; n = ", n, ")"), 
+     xlim = c(-2, 2),
+     ylim = c(-2, 2))
+points(qs, ps, type = "b")
+```  
 
 Properties of Leapfrog
 ===============================================================================
-* Second order method; Euler is first order (say what it is)
-* Is time-reversible
-* Conserves Angular Momentum
-* Conserves Volume (Symplectic)
+1. Second order method: In general better than Euler. 
+  * Measures how much the error grows in terms of $\epsilon$. First order has
+    error $O(\epsilon)$ second order $O(\epsilon^2)$ etc.
+2. Is time reversible:
+  * You can recover the trajectory by reversing the signs in the algorithm.
+3. Conserves volume:
+  * If a section of phase-space is transformed by Hamiltonian dynamics, the
+    volume is preserved.
+  * The Leapfrog preserves volume as well!
+  * Puts severe restrictions on the ability of leapfrog to diverge.
 
 Choosing L and epsilon
 ===============================================================================
@@ -229,16 +352,10 @@ Choosing L and epsilon
 * Hoffman, Gelman (2014): No-U-Turn Sampler
   * Selects $L$ and $\epsilon$ adaptively while preserving time-reversibility.
   * Is used in `STAN`.
+  
 Fixing the inexactness
 ===============================================================================
 We use Metropolis to fix the inexactness of the method. Describe.
-
-Choosing L and epsilon
-===============================================================================
-Describe how to choose L and epsilon
-
-A summary of where we are:
-===============================================================================
 
 How many samples to take from a trajectory.
 ===============================================================================
