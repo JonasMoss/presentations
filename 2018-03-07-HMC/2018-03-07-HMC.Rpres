@@ -1,11 +1,11 @@
 Hamiltonian Monte Carlo
-========================================================
+===============================================================================
 author: Jonas Moss
 date: Mars 2018
 autosize: true
 
 The Hamiltonian
-========================================================
+===============================================================================
 
 * $p_{i}$: The ith momentum component ($mv$).
 * $q_{i}$: The ith position component.
@@ -15,7 +15,7 @@ The Hamiltonian
   * $\frac{dq_{i}}{dt} = -\frac{\partial \mathcal{H}}{\partial p_{i}}$
 
 What about the physics?
-========================================================
+===============================================================================
 * Assume $\mathcal{H} = U(q) + K(p)$ 
 * $U$ is the *potential energy* of our particle in position $q$.
 * $K$ is the *kinetic energy* of our particle with momentum $p$.
@@ -26,7 +26,7 @@ What about the physics?
   * Kinetic energy: $K(q) = \frac{1}{2}mv^2$
 
 Hamiltonian dynamics
-========================================================
+===============================================================================
 * Restatement of Hamiltonian dynamics:
   * $F = \frac{dp_{i}}{dt} = \frac{\partial U}{\partial q_{i}}$
   * $v = \frac{dq_{i}}{dt} = -\frac{\partial K}{\partial p_{i}}$
@@ -34,18 +34,22 @@ Hamiltonian dynamics
   with no air resistance.
 * Consequence: When the potential energy is low, the kinetic energy is high. 
   The particle will always move about.
+* Running the Hamiltionan dynamics explores an *energy level* of the 
+  $p\times q$ phase space. 
   
 Hamiltionians in probability.
-========================================================  
+===============================================================================  
 * Recall that $\mathcal{H} = U(q) + K(p)$ 
-* Let $U(q) = -\log\pi(q)$: The potential energy surface is the nagative logarithm of the target density.
-* Let $K(p) = -\log\pi(p)$: The kinetic energy is the negative logarithm of the momentom proposal density.
+* Let $U(q) = -\log\pi(q)$: The potential energy surface is the nagative 
+  logarithm of the target density.
+* Let $K(p) = -\log\pi(p)$: The kinetic energy is the negative logarithm of the 
+  momentom proposal density.
 * The moment proposal density is typically normal, so that
-$K(p) \propto \frac{1}{2m}||q||^2$ for some mass $m$. Provides a good argument
-for using a normal moment proposal.
+  $K(p) \propto \frac{1}{2m}||q||^2$ for some mass $m$. Provides a good 
+  argument for using a normal moment proposal.
 
 Idealized Hamiltonian Monte Carlo
-========================================================
+===============================================================================
 For an initial position $p^{0}$, repeat a large number of times.
 
 1. Sample a momentum from $\pi(q)$, the moment proposal density.
@@ -53,58 +57,188 @@ For an initial position $p^{0}$, repeat a large number of times.
 3. Use the position variable as $p^{i+1}$.
 
 Problem: Explicit solutions are rare.
-========================================================
-Write down the solution of normal x normal. Recall that
-only linear differential equations can be expected to 
-be analytically solveable. 
-```{r}
-summary(cars)
-```
+===============================================================================
+* Systems of differential equations are almost never analytically.
+* Honorable exception: Linear systems are solvable.
+* We have to numerically integrate the Hamiltionan system!
+* Adds several complications: Must choose tuning parameters.
+* (++) Books have been written on integrating Hamiltonian systems.
+  * Look up "symplectic integration", "geometric integration", 
+    "integrating Hamiltonian".
+  * Connected to classical problems such as the n-body problem.
+
+Normal distribution: A linear problem
+===============================================================================
+* $U(q) = - \log(\pi(q)) = \frac{q^2}{2}$: Normal target distribution.
+* $K(p) = - \log(\pi(p)) = \frac{p^2}{2}$: Normal proposal distribution.
+
+System reduces to
+
+\[
+\begin{array}{ccc}
+\frac{dq_{i}}{dt} & = & p\\
+\frac{dp_{i}}{dt} & = & q
+\end{array}
+\]
 
 Normal distribution: A harmonic oscillator
-========================================================
-Write down the solution of normal x normal. Recall that
-only linear differential equations can be expected to 
-be analytically solveable. 
+===============================================================================
 
-Euler's method 
-========================================================
-Euler's method does not work well. Illustrate with a 
-drawing. Runge-Kutta doesn't help either. 
+Solutions: 
+
+\[
+\begin{array}{ccc}
+q\left(t\right) & = & r\cos\left(a+t\right)\\
+p\left(t\right) & = & -r\sin\left(a+t\right)
+\end{array}
+\]
+
+Circle with radius $r = \sqrt(p^2 + q^2)$ and shift $a$. 
+
+The energy is $E = -\frac{1}{2}(p^2 + q^2) = -\frac{1}{2}r^2$
+
+Normal distribution: A circle in phase space
+===============================================================================
+
 ```{r, echo = FALSE}
-plot(cars)
+r = 3
+t = seq(0, 10, by = 0.01)
+a = 2
+plot(r*cos(a + t), -r*sin(a + t), type = "l", bty = "l", xlab = "q", 
+     ylab = "p", main = paste0("Energy set (r = ", r, ")"))
 ```
 
+What about the energy distribution?
+===============================================================================
+* The energy level is distributed according to $-\frac{1}{2}\chi^2(2)$.
+* Alternative sampling strategy: 
+  1. Sample $E$ from $-\frac{1}{2}\chi^2(2)$, 
+  2. $(q, p)$ uniformly from the circle with radius $\sqrt(-2E)$.  
+  3. Project on $q$.
+  
+Energy distribution, R code
+===============================================================================
+```{r}
+set.seed(313)
+n = 10000
+E = -1/2*rchisq(n, 2)
+theta = runif(n, 0, 2*pi)
+q = sqrt(-2*E)*cos(theta)
+p = -sqrt(-2*E)*sin(theta)
+```  
+
+Energy distribution, density
+===============================================================================
+```{r, echo = FALSE}
+plot(kdensity::kdensity(q, adjust = 2))
+x = seq(-5, 5, by = 0.01)
+lines(x, dnorm(x), col = "red")
+```  
+
+Monte Carlo variant
+===============================================================================
+* Monte Carlo change:
+  1. Sample $E_{i+1}$ from $-\frac{1}{2}(\chi^2(1) + q_{i}^2)$, 
+  2. $(q, p)$ uniformly from the circle with radius $\sqrt(-2E)$.  
+  3. Project on $q$.
+* Note that $E ~ -\frac{1}{2}\chi^2(2)$ in the limit when $q_{i}$.
+* And vice versa!
+
+Monte Carlo variant, R  code
+===============================================================================
+```{r}
+n = 1000
+q = rep(0, n) # Positions, normal 
+E = rep(0, n) # Energies, -1/2*chi^2(2) 
+p = rnorm(n, mean = 0, sd = 1)
+theta = runif(n, 0, 2*pi) 
+
+for(i in 2:n) {
+  E[i] = -1/2*(q[i - 1]^2 + p[i]^2)
+  q[i] = sqrt(-2*E[i])*cos(theta[i])
+}
+```  
+
+Monte Carlo variant, ACF
+===============================================================================
+```{r, echo = FALSE}
+plot(acf(q))
+```  
+
+Monte Carlo variant, density
+===============================================================================
+```{r, echo = FALSE}
+plot(kdensity::kdensity(q, adjust = 2))
+x = seq(-5, 5, by = 0.01)
+lines(x, dnorm(x), col = "red")
+```  
+
+Monte Carlo variant, energies
+===============================================================================
+```{r, echo = FALSE}
+hist(E, breaks = 100, freq = FALSE, main = "Energy distribution")
+x = seq(-10, 0, by = 0.01)
+lines(x, 2*dchisq(-2*x, 2), col = "red")
+```  
+
+Euler's method 
+===============================================================================
+\[
+\begin{array}{ccc}
+p_{i}\left(t+\epsilon\right) & = & p_{i}\left(t\right)+\epsilon\frac{dp_{i}}{dt}\left(t\right)\\
+q_{i}\left(t+\epsilon\right) & = & p_{i}\left(t\right)+\epsilon\frac{dq_{i}}{dt}\left(t\right)
+\end{array}
+\]
+
+\[
+\begin{array}{ccc}
+p_{i}\left(t+\epsilon\right) & = & p_{i}\left(t\right)-\epsilon\frac{dU}{dq_{i}}\left(t\right)\\
+q_{i}\left(t+\epsilon\right) & = & q_{i}\left(t\right)+\epsilon\frac{dK}{dp_{i}}\left(t\right)
+\end{array}
+\]
+
 Geometric integrators
-========================================================
+===============================================================================
 Find out something about these: Also symplectic. Big field of study in its own
 right.
 
 The Leapfrog
-========================================================
+===============================================================================
 Describe the method
 
 Performance of Leapfrog
-========================================================
+===============================================================================
 Show the performance on normal
 
 Properties of Leapfrog
-========================================================
+===============================================================================
 * Second order method; Euler is first order (say what it is)
 * Is time-reversible
 * Conserves Angular Momentum
 * Conserves Volume (Symplectic)
 
+Choosing L and epsilon
+===============================================================================
+* $L$: The length of the trajectory.
+  * Too large makes the sampler more Metropolisy: Uses a long time to explore an
+    energy level.
+  * Too large takes a long time to compute.
+  * Large $L$ will transfer you back to the beginning.
+* $\epsilon$: The step-size used in the leapfrog integrator.
+  * Too small epsilon is inefficient; too large is inexact.
+* Hoffman, Gelman (2014): No-U-Turn Sampler
+  * Selects $L$ and $\epsilon$ adaptively while preserving time-reversibility.
+  * Is used in `STAN`.
 Fixing the inexactness
-========================================================
+===============================================================================
 We use Metropolis to fix the inexactness of the method. Describe.
 
 Choosing L and epsilon
-========================================================
+===============================================================================
 Describe how to choose L and epsilon
 
 A summary of where we are:
-========================================================
+===============================================================================
 
 How many samples to take from a trajectory.
-========================================================
+===============================================================================
