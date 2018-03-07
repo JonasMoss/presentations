@@ -8,6 +8,7 @@ transition-speed: slow
 navigation: section
 width: 1440
 height: 900
+font-family: 'Helvetica'
 
 The Hamiltonian
 ===============================================================================
@@ -19,6 +20,7 @@ incremental: true
 * Hamiltonian dynamics:
   * $\frac{dp_{i}}{dt} = \frac{\partial \mathcal{H}}{\partial q_{i}}$
   * $\frac{dq_{i}}{dt} = -\frac{\partial \mathcal{H}}{\partial p_{i}}$
+* Proscribes how $(p, q)$ moves in time.
 
 What about the physics?
 ===============================================================================
@@ -29,7 +31,8 @@ incremental: true
 * $K$ is the *kinetic energy* of our particle with momentum $p$.
 * Newton's 2nd law: $F=ma=\frac{dq}{dt}$
   * Potential energy: Think about gravity. The potential energy of an object
-    caught in Earth's gravitational field is $mgh$. $g = a$ in this case. 
+    caught in Earth's gravitational field is $mgh$: Here $g = a$ in this case,
+    $h$ is the distance from the Earth.
 * Velocity: $\frac{dp_{i}}{dt} = v$
   * Kinetic energy: $K(q) = \frac{1}{2}mv^2$
 
@@ -52,31 +55,35 @@ Hamiltionians in probability.
 type: sub-section
 incremental: true
 * Recall that $\mathcal{H} = U(q) + K(p)$ 
-* Let $U(q) = -\log\pi(q)$: The potential energy surface is the nagative 
+* Let $U(q) = -\log\pi(q)$: The potential energy surface is the negative 
   logarithm of the target density.
 * Let $K(p) = -\log\pi(p)$: The kinetic energy is the negative logarithm of the 
   momentom proposal density.
 * The moment proposal density is typically normal, so that
-  $K(p) \propto \frac{1}{2m}||q||^2$ for some mass $m$. Provides a good 
-  argument for using a normal moment proposal.
+  $K(p) \propto \frac{1}{2m}||q||^2$ for some mass $m$. 
+* Since classical kinetic energy is $K(q) = \frac{1}{2}mv^2$, this provides a 
+  good argument for using a normal moment proposal.
 
 Idealized Hamiltonian Monte Carlo
 ===============================================================================
 type: section
 incremental: true
-For an initial position $p^{0}$, repeat a large number of times.
-
-1. Sample a momentum from $\pi(q)$, the moment proposal density.
-2. Integrate the Hamiltonian dynamics for some time.
-3. Use the position variable as $p^{i+1}$.
+* For an initial position $p^{0}$, repeat a large number of times.
+  1. Sample a momentum from $\pi(q)$, the moment proposal density.
+  2. Integrate the Hamiltonian dynamics for some time.
+  3. Use the position variable as $p^{i+1}$.
+* Just one form of idealized HMC: This is the Markov variant.
+  * Possible to have an idealized non-Markov HMC as well!
 
 Problem: Explicit solutions are rare.
 ===============================================================================
 type: sub-section
 incremental: true
 * Systems of differential equations are almost never analytically solvable.
-* Honorable exception: Linear systems are solvable.
-* We have to numerically integrate the Hamiltionan system!
+* Honorable exception: Linear systems are solvable using eigenvalue 
+  decomposition.
+* We have to *numerically integrate* the Hamiltionan system in order to obtain
+  estimats of $p(t), q(t)$.
 * Adds several complications: Must choose tuning parameters.
 * (++) Books have been written on integrating Hamiltonian systems.
   * Look up "symplectic integration", "geometric integration", 
@@ -137,6 +144,11 @@ incremental: true
   1. Sample $E$ from $\frac{1}{2}\chi^2(2)$, 
   2. $(q, p)$ uniformly from the circle with radius $\sqrt(-2E)$.  
   3. Project on $q$.
+* Hamiltonian Monte Carlo without Markoc Chains.
+* Exact sampling: Equivalent to the popular *Box-Muller transform*.
+  * Note that $\chi^2(2) = \exp(1/2)$
+  * Not the fastest algorithm since $log$, $cos$, $sin$ are expensive to 
+    evaluate.
   
 Energy distribution, R code
 ===============================================================================
