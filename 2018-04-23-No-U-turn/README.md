@@ -1,0 +1,1 @@
+A presentation of Hamiltonian Monte Carlo at the course STK9290 - Selected Themes in Advanced Statistics.

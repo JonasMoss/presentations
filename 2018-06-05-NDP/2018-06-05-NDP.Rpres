@@ -1,0 +1,221 @@
+Nested Dirichlet Processes
+===============================================================================
+author: Jonas Moss
+date: June 2018
+autosize: true
+transition: zoom
+transition-speed: slow
+navigation: section
+width: 1440
+height: 900
+font-family: 'Helvetica'
+
+The Dirichlet Process
+===============================================================================
+incremental: true
+
+* Denoted $DP(\alpha Q)$ 
+  - $Q$ is a probability measure on $\mathcal{S}$, the base measure, 
+  - $\alpha > 0$ is the concentration parameter. 
+* If $P \sim DP(\alpha Q)$, $P$ is a *random measure* on $\mathcal{S}$.
+* Defining feature: 
+  - If $P \sim DP(\alpha Q)$ and 
+  $\left\{ A_{i}\right\} _{i=1}^{n}$ is a finite partition of $\mathcal{S}$, 
+  $(P(A_1), P(A_2), \ldots , P(A_n)) \sim \textrm{Dir}(\alpha Q(A_1), 
+  \alpha Q(A_2), \ldots , \alpha Q(A_n))$
+  - Here $\textrm{Dir} (\cdot)$ is the Dirichlet distribution. 
+* Is the workhorse of Bayesian non-parametrics.
+
+Essential Properties
+===============================================================================
+incremental: true
+
+* If $P \sim DP(\alpha Q)$, then $P$ is an infinite mixture of Dirac measures
+  - $P = \sum_{i=1}^{\infty}\pi_{i}\delta_{s_{i}}$, where $s_{i}\in\mathcal{S}$
+    and $\pi_{i}\geq0$ with $\sum_{i=1}^{\infty}\pi_{i}=1$
+  - $\pi_i$ are distributed according to the stick-breaking process.
+  - $s_i$ are distributed according to $Q$.
+  - In particular, $P$ is atomic. 
+
+Where does the Dirichlet Process live?
+===============================================================================
+incremental: true
+
+* Typically, $\mathcal{S} = \Theta$ for some finite-dimensional parameter space.
+* For instance, $\Theta = \mathbb{R}$ is common.
+* Normal mixture model for clustering: $$
+\begin{eqnarray*}
+x_{i}\mid\mu_{i} & \sim & N\left(\mu_{i},1\right)\\
+\mu_{i}\mid P & \sim & P\\
+P & \sim & DP\left(\alpha Q\right)
+\end{eqnarray*}$$
+* *Note:* This works for clustering since $P$ is atomic and puts high 
+  probability only on a subset of its atoms!
+* But there are *few* constraints on $\mathcal{S}$!
+ - Can *at least* be any complete and separable metric space. (A *Polish* space.) 
+ - When $\Theta$ is Polish, the set of probability measures over $\Theta$ is 
+   Polish in the Prokhorov metric.
+ - Thus $\mathcal{S} = \mathcal{M}(\Theta)$, the set of probability measures 
+   over $\Theta$, is allowed!
+ - This observation allows us to nest our Dirichlet processes.
+   
+A Nested Model
+===============================================================================
+incremental: true
+* A nested model looks like this
+$$\begin{eqnarray*}
+x_{ij}\mid\theta_{ij} & \sim & F\left(\theta_{ij}\right)\\
+\theta_{ij}\mid P_{j} & \sim & P_{j}\\
+P_{j}\mid Q & \sim & Q\\
+Q & \sim & DP\left(\alpha G\right)
+\end{eqnarray*}$$
+* Here $j = 1, 2, \ldots, J$ are class labels and $i = 1, 2, \ldots I_j$ are
+  identifiers within each class.
+* Where they live?
+  - $F(\theta_{ij})$ lives on $\mathcal{S}$, the sample space of the 
+    observations $x_{ij}$; 
+  - $P_j$ lives on $\Theta$;
+  - $Q$ lives on the space of probability measures over $\Theta$, that is
+    $\mathcal{M}(\Theta)$.
+* In the paper, $G = DP(\beta H)$ for some probability $H$ living on
+  $\Theta$.
+
+Interpretation of the model
+===============================================================================
+incremental: true
+
+* All observations with class label $j$ fixed come from the same mixture 
+  distribution $\sum_{k=1}^{\infty}F\left(\theta_{k}\right)\pi_{k}$.
+* But the observations with different class labels can be forced to come from 
+  the same as well!
+  - Since the DP clusters whenever it is used, we *cluster on the level of class
+    labels*.
+* *Not hierarchical*!
+  - In hierarchical Dirichlet processes, the top-most measure lives on $\Theta$.
+  - The hierarchical variant of the model is $$\begin{eqnarray*}
+x_{ij}\mid\theta_{ij} & \sim & F\left(\theta_{ij}\right)\\
+\theta_{ij}\mid P_{j} & \sim & P_{j}\\
+P_{j}\mid Q & \sim & DP\left(\alpha Q\right)\\
+Q & \sim & DP\left(\beta H\right)
+\end{eqnarray*}$$
+  - Here $H$ lives on $\Theta$. 
+  - Each subsequent Dirichlet process contains only reweighting of the atoms 
+    drawn in $Q$.
+    
+More nesting!
+===============================================================================
+incremental: true    
+* Introducing another class label, we get more nesting:
+$$\begin{eqnarray*}
+x_{ijk}\mid\theta_{ijk} & \sim & F\left(\theta_{ijk}\right)\\
+\theta_{ij}\mid P_{jk} & \sim & P_{jk}\\
+P_{jk}\mid P_{j} & \sim & P_{j}\\
+P_{j}\mid P & \sim & P\\
+P & \sim & DP\left(\alpha H\right)
+\end{eqnarray*}$$
+* For instance, $j$ is the school class label and $k$ is the county class label
+* The measure $H$ is a doubly neste Dirichlet process: 
+  $H = DP(\beta DP(\gamma G))$, where $G$ lives on $\Theta$.
+
+In Great Generality
+===============================================================================
+incremental: true   
+* In general: $$
+\begin{eqnarray*}
+x_{i_{1},i_{2},\ldots,i_{M}}\mid\theta_{i_{1},i_{2},\ldots,i_{M}} & \sim & F\left(\theta_{i_{1},i_{2},\ldots,i_{M}}\right)\\
+\theta_{i_{1},i_{2},\ldots,i_{M}}\mid P_{i_{2},\ldots,i_{M}} & \sim & P_{i_{2},\ldots,i_{M}}\\
+P_{i_{2},\ldots,i_{M}}\mid P_{i_{3},\ldots,i_{M}} & \sim & P_{i_{3},\ldots,i_{M}}\\
+ & \vdots\\
+P_{i_{M}}\mid P & \sim & P\\
+P & \sim & DP\left(\alpha H\right)
+\end{eqnarray*} $$
+- Here $H$ lives on $\mathcal{M}(\mathcal{M}(\ldots(\mathcal{M}(\Theta))))$,
+  nested $m - 1$ times.
+- Hence $H = DP(\alpha_1 DP(\ldots\alpha_{m-1}DP(G)))$ for a $G$ living on $\Theta$.
+- With NDPs, stick-breaking and truncation can be used for computation here as well.
+
+
+The Model Skeleton in Ordinary NDP
+===============================================================================
+incremental: true   
+- For class labels $j=1,2,\ldots,J$ and $i=1,2,\ldots I_{j}$, 
+  $$x_{ij}\mid\theta_{ij}\sim F\left(\theta_{ij}\right)$$
+- Each parameter $\theta_{ij}$ is drawn from a distribution $P_{j}$,
+  $$\theta_{ij}\mid P_{j}\sim P_{j}$$
+- The $P_{j}$ are drawn from some $P$,
+  $$P_{j}\mid P\sim P$$
+- Can recover a *random effects model*: $$\begin{eqnarray*}
+y_{ij}\mid\mu_{ij} & \sim & N(\mu_{ij},1)\\
+\mu_{ij} & \sim & N\left(\mu_{j},1\right)\\
+\mu_{j} & \sim & N\left(\mu_{0},\sigma_{0}^{2}\right)
+\end{eqnarray*}$$
+  - Here $y_{ij}$ could be measurements on subject $j$ at different times $i$.
+
+Clustering or Hierarchy? (1)
+===============================================================================
+incremental: true   
+What is $P$? Three scenarios:
+
+- $P$ is diffuse. 
+  - The probability that $P_{j}=P_{j'}$ is equal to $0$.
+  - An ordinary hierarchical model a la the random effects model.
+
+- $P$ is purely atomic. 
+  - Positive probability that $P_{j}=P_{j'}$. 
+  - A clustering model. *Happens if P is a Dirichlet process.*
+
+Clustering or Hierarchy? (2)
+===============================================================================
+incremental: true   
+- $P$ is a non-purely atomic.
+  - $P\left(P_{j}=P_{j'}\|P_{j}=p\right)$ is a non-constant function of $p$.
+  - A mix of clustering and hierarchy.
+  - Could that be useful? This kind of measure appears in Bayes factors etc.
+
+- Here the $\Sigma$-algebra is the Borel $\Sigma$-algebra over the set of 
+  probability measures on $\Theta$, $\mathcal{M}\left(\Theta\right)$.
+- I usually want a diffuse probability measure. 
+  - Clusters typically do not exists in reality.
+  - If used for explanation, simplification, etc, try a loss function instead.
+
+A Possible Football Application?
+===============================================================================
+incremental: true   
+$$\begin{eqnarray*}
+x\mid\mu,\alpha_{ik},\delta_{jl},\hslash & \sim & \textrm{Poisson}\left(\exp\left[\mu+\alpha_{ik}+\delta_{jl}+\hslash\right]\right)\\
+\left(\alpha_{ik},\delta_{ik}\right)\mid\left(\alpha_{i},\delta_{i}\right) & \sim & N\left(\left(\alpha_{i},\delta_{i}\right),\sigma^{2}I\right)\\
+\left(\alpha_{i},\delta_{i}\right)|P_{i} & \sim & P_{i}\\
+P_{i}\mid P & \sim & P\\
+P & \sim & \textrm{DP}\left(\alpha\textrm{DP}\left(\beta H\right)\right)\\
+\\
+H & = & N_{2}\left(0,I\right)\\
+\sigma^{2} & \sim & \textrm{Exp}\left(1\right)\\
+\alpha,\beta & \sim & \textrm{Exp}\left(1\right)\\
+\mu & \sim & N\left(0,1\right)\\
+\hslash & \sim & N\left(0,1\right)
+\end{eqnarray*}$$
+
+Something Vague About Computation
+===============================================================================
+incremental: true   
+- Sampling from the model:
+  - Can use stick-breaking with truncation on both of the Dirichlet processes.
+  - Sample some $\theta$ parameters to live with the stick-breaks.
+  - Stick-break yourself to a distribution and sample randomly from a randomly
+    chosen Dirichlet process.
+- Sample from the posterior: 
+  - Use full conditional distributions, or,
+  - Use something like STAN.
+
+The End
+===============================================================================
+incremental: true   
+
+- Moderately popular, especially for machine learning. Cited by Blei in a 
+  paper about topic classification. 
+- Does not seem like a very useful idea. The example is forced.
+- Difficult to interpret, and the presentation does not help too much. Except 
+  p. 4.
+- But...
+  - Wonderfully cool!
+- Bye bye!

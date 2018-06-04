@@ -1,0 +1,24 @@
+real Arsenal[76];
+real Bournemouth[76];
+real Brighton[38];
+real Burnley[76];
+real Chelsea[76];
+real Crystal_Palace[76];
+real Everton[76];
+real Huddersfield[38];
+real Hull[38];
+real Leicester[76];
+real Liverpool[76];
+real Man_City[76];
+real Man_United[76];
+real Middlesbrough[38];
+real Newcastle[38];
+real Southampton[76];
+real Stoke[76];
+real Sunderland[38];
+real Swansea[76];
+real Tottenham[76];
+real Watford[76];
+real West_Brom[76];
+real West_Ham[76];
+
