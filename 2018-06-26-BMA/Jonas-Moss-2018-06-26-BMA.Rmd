@@ -1,0 +1,418 @@
+---
+title: "A Bayesian Meta-analysis Method that Corrects for Publication Bias"
+short-title: "Bayesian Meta-analysis"
+author: "Jonas Moss"
+institute: "University of Oslo"
+date: |
+  | June 26, 2018
+  | Nordstat 2018
+output:
+  beamer_presentation:
+    fonttheme: "structurebold"
+    colortheme: "spruce"
+    theme: "Boadilla"
+    template: mytemplate.tex
+    incremental: true
+header-includes:
+- \usepackage{calligra}
+---
+``` {r, include = FALSE}
+library("straussR")
+```
+
+```{r setup, include = FALSE, cache = TRUE}
+library("straussR")
+motyl_between = dplyr::filter(motyl, design == "Between")
+motyl_between$M = 1/motyl_between$vi
+
+## Meta-analysis for motyl_between
+motyl_data = data.frame(z = abs(motyl_between$z),
+                  M = motyl_between$M,
+                  lower = qt(0.95, df = motyl_between$M),
+                  upper = qt(0.025, df = motyl_between$M),
+                  dist_indices = rep(1, length(motyl_between$M)))
+motyl_data$lower[abs(motyl_between$z) > qt(0.975, df = motyl_between$M)] =
+  qt(0.95, df = motyl_between$M)
+motyl_data$dist_indices[abs(motyl_between$z) < motyl_data$lower] = 9
+motyl_data$dist_indices[abs(motyl_between$z) > qt(0.95, df = motyl_between$M)]
+motyl_data = dplyr::filter(motyl_data, M > 5)
+motyl_data$logn = as.vector(scale(log(motyl_data$M)))
+
+motyl_data_npb = motyl_data
+motyl_data_npb$dist_indices = 19
+
+
+straussR(formula = z ~ gumbel(mean ~ 1, sd ~ 1, p ~ 1),
+         
+         data = motyl_data,
+         
+         priors = list(mean = list((Intercept) ~ normal(0, 1)),
+                       sd = list((Intercept) ~ gamma(1, 1)),
+                       p = list((Intercept) ~ beta(1, 1))),
+         
+         chains = 1,
+         control = list(adapt_delta = 0.999,
+                        max_treedepth = 10)) ->
+  motylmod_gumbel
+
+straussR(formula = z ~ gumbel(mean ~ 1, sd  ~ 1),
+         
+         data = motyl_data_npb,
+         
+         priors = list(mean = list((Intercept) ~ normal(0, 1)),
+                       sd = list((Intercept) ~ gamma(1, 1))),
+         
+         chains = 1,
+         control = list(adapt_delta = 0.999,
+                        max_treedepth = 10)) ->
+  motylmod_npb_gumbel
+
+# 
+# mean_npb = rstan::extract(motylmod_npb_gamma$stan_object)$beta_positive[ , 1]
+# sd_npb = rstan::extract(motylmod_npb_gamma$stan_object)$beta_positive[ , 2]
+# shape_npb = mean_npb^2/sd_npb^2
+# rate_npb = mean_npb/sd_npb^2
+# 
+# mean_pb = rstan::extract(motylmod_gamma$stan_object)$beta_positive[ , 1]
+# sd_pb = rstan::extract(motylmod_gamma$stan_object)$beta_positive[ , 2]
+# shape_pb = mean_pb^2/sd_pb^2
+# rate_pb = mean_pb/sd_pb^2
+# 
+# x = seq(0, 3, by = 0.005)
+# y_npb = sapply(x, function(x) mean(dgamma(x, shape_npb, rate_npb)))
+# y_pb = sapply(x, function(x) mean(dgamma(x, shape_pb, rate_pb)))
+
+```
+
+## This is What $p$-hacking Looks Like!
+
+```{r first_plot, echo = FALSE}
+suppressWarnings(plot(motyl_between$M, motyl_between$yi,
+     ylab = expression(theta), cex.lab = 1.6, cex.lab = 1.6, xlab = "n", 
+     log = "xy", bty = "l", pch = 20, 
+     sub = "Motyl et al. (2017): The state of social and personality science"))
+lines(c(0.01, 1000), 1.96/sqrt(c(0.01, 1000)), col = "blue", lty = 2, lwd = 2)
+legend(x = "topright", col = c("black", "blue"), lty = c(NA, 2), cex = 1.6,
+       legend = expression("Effect size from study", 1.96/sqrt(n)),
+       pch = c(20, NA), lwd = c(NA, 2), bty = "n")
+legend(x = "bottomleft", legend = "87% of results significant (n = 529)", 
+       bty = "n", cex = 1.6)
+
+```
+
+## What is Classical Meta-analysis?
+- Studies $x_i$ are drawn according $x_{i} \sim N\left(\theta_{i},se_i\right)$
+    - $\theta_{i}$ are normalized -- they are *effect sizes*.
+    - Most common is the *standardized mean difference*, 
+      $\frac{\mu_1 - \mu_2}{\sigma}$.
+    - Fixed effects: $\theta_i = \theta$ for all $i$.
+    - Random effects: $\theta_i \sim N(\theta_0, \sigma_0^2)$.
+- The effect sizes are usually closely related:
+    - Effect of a class of anti-depressiva;
+    - effect of some psychological intervention.
+    - ... but they don't have to be *that* closely related!
+- **Question:** Is the classical model realistic in presence of *p*-hacking?
+
+## What the Previous Plot *Should Have* Looked Like!
+```{r second_plot, echo = FALSE}
+set.seed(1337)
+theta0 = 0.6
+sigma0 = 0.25
+thetas = rnorm(nrow(motyl_between), theta0, sigma0)
+y = rnorm(length(thetas), thetas, 1/sqrt(motyl_between$M))
+suppressWarnings(plot(motyl_between$M, y,
+     ylab = expression(theta), cex.lab = 1.6, cex.lab = 1.6, xlab = "n", log = "xy", bty = "l",
+     pch = 20, sub = "Simulated data, random effects (mean: 0.6, sd: 0.25)"))
+lines(c(0.01, 1000), 1.96/sqrt(c(0.01, 1000)), col = "blue", lty = 2, lwd = 2)
+legend("bottomleft", col = c("black", "blue"), lty = c(NA, 2), cex = 1.6,
+       legend = expression("Effect size from simulated study", 1.96/sqrt(n)),
+       pch = c(20, NA), lwd = c(NA, 2), bty = "n")
+
+```
+
+
+## What the previous plot *should have* looked like!
+```{r third_plot, echo = FALSE}
+set.seed(1337)
+theta0 = 0.6
+sigma0 = 0.25
+thetas = rnorm(nrow(motyl_between), theta0, sigma0)
+y = rnorm(length(thetas), thetas, 1/sqrt(motyl_between$M))
+suppressWarnings(plot(motyl_between$M, y,
+     ylab = expression(theta), cex.lab = 1.6, cex.lab = 1.6, xlab = "n", log = "xy", bty = "l",
+     pch = 20, sub = "Simulated data, random effects (mean: 0.6, sd: 0.25)"))
+lines(c(0.01, 1000), 1.96/sqrt(c(0.01, 1000)), col = "blue", lty = 2, lwd = 2)
+legend("bottomleft", col = c("black", "blue"), lty = c(NA, 2), cex = 1.6,
+       legend = expression("Effect size from simulated study", 1.96/sqrt(n)),
+       pch = c(20, NA), lwd = c(NA, 2), bty = "n")
+suppressWarnings(points(motyl_between$M, motyl_between$yi,
+     ylab = expression(theta), cex.lab = 1.6, cex.lab = 1.6, xlab = "n", 
+     log = "xy", bty = "l", pch = 20, col = "red",
+     sub = "Motyl et al. (2017): The state of social and personality science"))
+
+```
+
+## What is Selection for Significance?
+- Happens when only statistically significant results (p < 0.05) are published.
+    - In this case $$\ensuremath{p\left(x_{i}\mid\theta_{i},se_{i}\right)=\phi_{\left(1.96\cdot se_{i},\infty\right)}\left(\theta_{i},se_{i}\right)}$$
+    - $\phi_{\left(a,b\right)}$ is a truncated normal.
+    - Can be caused by both *p*-hacking and publication bias.
+- How to account for selection for significance?
+    - Use the random / fixed effects model with a truncated normal!
+    - Goes back to Hedges (1984), recently discussed by Gelman.
+- **Problem**: The first plot also contains studies that weren't affected by
+  selection for significance!
+
+## Revisiting the First Plot
+```{r first_plot_again, echo = FALSE}
+suppressWarnings(plot(motyl_between$M, motyl_between$yi,
+     ylab = expression(theta), cex.lab = 1.6, cex.lab = 1.6, xlab = "n", 
+     log = "xy", bty = "l", pch = 20, 
+     sub = "Motyl et al. (2017): The state of social and personality science"))
+lines(c(0.01, 1000), 1.96/sqrt(c(0.01, 1000)), col = "blue", lty = 2, lwd = 2)
+legend(x = "topright", col = c("black", "blue"), lty = c(NA, 2), cex = 1.6,
+       legend = expression("Effect size from study", 1.96/sqrt(n)),
+       pch = c(20, NA), lwd = c(NA, 2), bty = "n")
+legend(x = "bottomleft", legend = "87% of results significant (n = 529)", 
+       bty = "n", cex = 1.6)
+
+```
+
+## The Mixture Model Skeleton
+- *Key idea:* Use *partial* selection for significance!
+- **Prototypical likelihood:** $$p\left(x_{i}\mid\theta_{i},se_{i},p\right)=p\phi_{\left(1.96\cdot se_{i},\infty\right)}\left(\theta_{i},se_{i}\right)+\left(1-p\right)\phi\left(\theta_{i},se_{i}\right)$$
+- The parameter $p$ is the *propensity to p-hack*!
+    - Beta is a reasonable prior for $p\mid p_{0},\psi\sim\textrm{Beta}\left(p_{0},\psi\right)$
+    - But can and will depend on covariates!
+- Model for $\theta_i$ could be normal: $\theta_{i}\mid\theta_{0},\sigma_0\sim N\left(\theta_{0},\sigma_{0}^{2}\right)$
+    - Other models possible, for instance skew-normal.
+    - Can also depend on covariates.
+- Computationally feasible due to STAN.
+- On to examples!
+
+
+## The Effect Size Distribution in Psychology
+
+- **Likelihood:** $$p\left(x_{i}\mid\theta_{i},p\right)=p\phi_{\left(1.96\cdot se_{i},\infty\right)}^{f}\left(\theta_{i},se_{i}\right)+\left(1-p\right)\phi^{f}\left(\theta_{i},se_{i}\right)$$
+    - Here $\phi^f$ is the *folded normal*, distribution of $|Z|$ where $Z$ is normal.
+    - Used because the effect sizes have no inherent sign.
+    - *Note:* $\theta_i$ can still be negative.
+- **Effect size distribution:** $\theta_{i}\sim\textrm{Gumbel}\left(\mu,\sigma\right)$
+    - Has positive skewness, which we probably want.
+    - Has much better fit than the normal distribution.
+- **Priors:** $\theta_0\sim N\left(0,1\right)$, $\sigma\sim\textrm{Exp}\left(1\right)$, $p\sim\textrm{Uniform}$
+
+## Posterior Predictive Distributions
+```{r, echo = FALSE}
+
+to_sigma = function(sd) 1/pi*sqrt(6)*sd
+to_mu = function(mean, sd) mean - to_sigma(sd)*0.577
+
+mean_npb = rstan::extract(motylmod_npb_gumbel$stan_object)$beta_unbounded
+sd_npb = rstan::extract(motylmod_npb_gumbel$stan_object)$beta_positive
+
+mu_npb = to_mu(mean_npb, sd_npb)
+sigma_npb = to_sigma(sd_npb)
+
+#shape_npb = mean_npb^2/sd_npb^2
+#rate_npb = mean_npb/sd_npb^2
+
+mean_pb = rstan::extract(motylmod_gumbel$stan_object)$beta_unbounded
+sd_pb = rstan::extract(motylmod_gumbel$stan_object)$beta_positive
+
+mu_pb = to_mu(mean_pb, sd_pb)
+sigma_pb = to_sigma(sd_pb)
+
+#shape_pb = mean_pb^2/sd_pb^2
+#rate_pb = mean_pb/sd_pb^2
+
+x = seq(-1.2, 3, by = 0.005)
+y_npb = sapply(x, function(x) mean(extraDistr::dgumbel(x, mu_npb, sigma_npb)))
+y_pb = sapply(x, function(x) mean(extraDistr::dgumbel(x, mu_pb, sigma_pb)))
+
+plot(x, y_npb, type = "l", lwd = 2, col = "black", bty = "l", cex.lab = 1.6, cex.lab = 1.6, xlab = "x",
+     ylab = "Density")
+lines(x, y_pb, type = "l", lwd = 2, col = "red")
+legend("topright", col = c("red", "black", ""), lwd = c(2, 2, NA), bty = "n",
+       legend = c("Corrected (mean = 0.12)", 
+                  "Not corrected (mean = 0.58)",
+                  "Propensity to p-hack: 0.87 (0.02)"), cex = 1.7)
+
+
+
+```
+
+## A Simulation from the Posterior
+```{r, echo = FALSE}
+
+rtruncfnorm = function(n, mean = 0, sd = 1, a = -Inf, b = Inf) {
+  if(all(is.infinite(b))) {
+    pos = pnorm((mean - a)/sd)
+    neg = pnorm(- (a + mean)/sd)
+    p = pos/(pos + neg)
+    p[is.na(p)] = 1
+    samples = rbinom(n, 1, p)
+  } else {
+    pos = pnorm((b - mean)/sd) - pnorm((a - mean)/sd)
+    neg = pnorm((- a - mean)/sd) - pnorm((- b - mean)/sd)
+    p = pos/(pos + neg)
+    p[is.na(p)] = 1
+    samples = rbinom(n, 1, p)    
+  }
+
+  truncnorm::rtruncnorm(n, mean = mean, sd = sd, a = a, b = b) * samples +
+    abs(truncnorm::rtruncnorm(n, mean = mean, sd = sd, a = -b, b = -a)) *
+    (1 - samples)
+}
+
+set.seed(100)
+N = nrow(motyl_data_npb)
+thetas = sample(rstan::extract(motylmod_gumbel$stan_object)$thetas_unbounded, N)
+probs = sample(rstan::extract(motylmod_gumbel$stan_object)$beta_unit, N)
+hacked = rbinom(N, prob = probs, size = 1)
+vals = (1 - hacked)*straussR:::rfnorm(N, mean = thetas, sd = 1/sqrt(motyl_data_npb$M)) +
+       hacked*rtruncfnorm(N, mean = thetas,
+                             sd = 1/sqrt(motyl_data_npb$M),
+                             a = 1.96*1/sqrt(motyl_data_npb$M))
+
+ksp = suppressWarnings(ks.test(vals, motyl_data$z/sqrt(motyl_data$M))$p.value)
+plot(motyl_data_npb$M, motyl_data_npb$z/sqrt(motyl_data_npb$M), log = "xy", 
+     pch = 20, bty = "l", cex.lab = 1.6, cex.lab = 1.6, xlab = "x",  col = "black", ylab = "Density",
+     sub = "Mean KS p-value: 0.3")
+points(motyl_data_npb$M, vals, pch = 20, col = "red")
+ns = c(1, 1000)
+lines(ns, 1.96/sqrt(ns))
+legend("bottomright", col = c("red", "black", NA), lwd = c(2, 2, NA), bty = "n",
+       legend = c("Simulated", "Original", paste0("KS test: ", round(ksp, 2))), cex = 1.7)
+
+
+```
+
+## Bangert-Drowns, Hurley & Wilkinson (2004)
+```{r, echo = FALSE}
+data("dat.bangertdrowns2004", package = "metafor")
+plot(x = 1/dat.bangertdrowns2004$vi,
+     y = dat.bangertdrowns2004$yi,
+     pch = 20,
+     bty = "l",
+     cex = 2,
+     col = dat.bangertdrowns2004$meta + 1,
+     cex.lab = 1.6, cex.lab = 1.6, xlab = "n", ylab = expression(theta),
+     sub = paste0("n = ", nrow(dat.bangertdrowns2004)))
+lines(x = 1/sort(dat.bangertdrowns2004$vi),
+      y = 1.96*sqrt(sort(dat.bangertdrowns2004$vi)), lty = 2)
+lines(x = 1/sort(dat.bangertdrowns2004$vi),
+      y = -1.96*sqrt(sort(dat.bangertdrowns2004$vi)), lty = 2)
+abline(h = 0, lty = 3, col = "grey")
+legend(x = "topright", col = c("black", "red", "black"), cex = 1.6, 
+       pch = c(20, 20, NA), lty = c(NA, NA, 2),
+       legend = c("Without meta-cognitive reflection",
+                  "With meta-cognitive reflection",
+                  expression(paste("1.96/", sqrt(n)))), bty = "n")
+
+```
+
+## Questions for Bangert-Drowns, Hurley & Wilkinson
+- **Question I**: Are the **\textcolor{red}{red}** effects different from the **\textcolor{black}{black}** effects?
+    - Results from conventional random effects meta-analysis:
+        - Grand mean: 0.22 (p < 0.0001)
+        - \textcolor{red}{red mean} mean: 0.35 (p = 0.01)
+        - \textcolor{black}{black mean} mean: 0.12 (p = 0.03)
+    - But has the covariate itself been selected for significance?
+    
+- **Question II**: What is the effect size distribution?
+    - Fixed effects or random effects?
+    - Does *p*-hacking change the estimated effect sizes?
+
+## Is there a difference between \textcolor{red}{red} and \textcolor{black}{black}?
+- Likelihood: $$p\left(x_{i}\mid\theta_{i},se_{i},p\right)=p\phi_{\left(1.96\cdot se_{i},\infty\right)}\left(\theta_{i},se_{i}\right)+\left(1-p\right)\phi\left(\theta_{i},se_{i}\right)$$
+- Effect size distribution: $$\theta_{i}\sim N(\theta_0+\theta_M\cdot\textrm{Meta?},\sigma)$$
+- Priors: $\theta_0, \theta_M\sim N\left(0,1\right)$, $\sigma\sim\textrm{Exp}\left(1\right)$, $p\sim\textrm{Uniform}$
+- 
+   Model             $\theta_0$      $\theta_M$       $\sigma$      $p$
+------------------ --------------- --------------- --------------  ------------ 
+  Corrected         $0.02 (0.06)$   $0.14 (0.16)$    $0.1 (0.1)$   $0.3 (0.07)$  
+  Not corrected     $0.14 (0.05)$   $0.21 (0.10)$    $0.2 (0.05)$  $NA$ 
+
+## Without \textcolor{red}{Meta-cognition}
+- Logistic regression for the propensity to *p*-hack! 
+- $p\mid n =\textrm{logit}\left(p_{0}+p_{1}\log n\right)$
+- $p_{0},p_{1}\sim N\left(0,1\right)$
+- *p*-hacking becomes *harder* with increasing sample size.
+- Publication is easier with larger $n$.
+    
+## Visually Evidence for Logistic Regression on $p$    
+```{r, echo = FALSE}
+data("dat.bangertdrowns2004", package = "metafor")
+plot(x = 1/dat.bangertdrowns2004$vi,
+     y = dat.bangertdrowns2004$yi,
+     pch = 20,
+     bty = "l",
+     cex = 2,
+     col = "black",
+     cex.lab = 1.6, cex.lab = 1.6, xlab = "n", ylab = expression(theta),
+     sub = paste0("n = ", nrow(dat.bangertdrowns2004)))
+lines(x = 1/sort(dat.bangertdrowns2004$vi),
+      y = 1.96*sqrt(sort(dat.bangertdrowns2004$vi)), lty = 2)
+lines(x = 1/sort(dat.bangertdrowns2004$vi),
+      y = -1.96*sqrt(sort(dat.bangertdrowns2004$vi)), lty = 2)
+abline(h = 0, lty = 3, col = "grey")
+
+```
+
+## Results without \textcolor{red}{Meta-cognition}
+   Model             $\theta_0$      $\sigma$       $p_0$         $p_1$
+------------------ --------------- ------------- ------------  ------------ 
+  Random effects   $0.07 (0.07)$   $0.1 (0.05)$  $-0.7 (0.3)$  $-0.5 (0.3)$  
+  Fixed effects    $0.04 (0.07)$   $NA$          $-0.8 (0.3)$  $-0.6 (0.4)$ 
+
+## The Shape of the *p*-hacking Propensity
+```{r, setup-bangertdrowns,  echo = FALSE}
+bangertdrowns2004 = with(dat.bangertdrowns2004, {
+  data.frame(z = 1/sqrt(vi)*yi,
+             M = 1/vi,
+             lower = qt(0.975, df = 1/vi),
+             upper = qt(0.025, df = 1/vi),
+             dist_indices = rep(5, length(yi))
+             )
+})
+
+bangertdrowns2004$n = as.vector(scale(bangertdrowns2004$M))
+bangertdrowns2004$sqrtn = as.vector(scale(sqrt(bangertdrowns2004$M)))
+bangertdrowns2004$logn = as.vector(scale(log(bangertdrowns2004$M)))
+bangertdrowns2004$meta = dat.bangertdrowns2004$meta
+bangertdrowns2004$meta[is.na(bangertdrowns2004$meta)] = 0
+bangertdrowns2004$meta = bangertdrowns2004$meta
+
+bangertdrowns2004$dist_indices[bangertdrowns2004$z < qnorm(0.975)] = 10
+bangertdrowns2004$dist_indices[-bangertdrowns2004$z > qnorm(0.975)] = 6
+bangertdrowns2004_npb = bangertdrowns2004
+bangertdrowns2004_npb$dist_indices = 20
+
+```
+
+```{r, echo = FALSE}
+ns = sort(bangertdrowns2004$M)
+logns = sort(bangertdrowns2004$logn)
+plot(x = ns,
+     y = 1/(1 + exp(0.7 + 0.5*logns)),
+     type = "l",
+     bty = "l",
+     lty = 1,
+     lwd = 2,
+     cex.lab = 1.6, xlab = "n",
+     ylab = "p")
+
+```
+
+## \textcalligra{The End}
+
+- *p*-hacking is everywhere and must be accounted for!
+- When correcting for publication bias we should
+    - Care about selection for significance!
+    - Try out the mixture model to do the correction!
+    - Stay Bayesian!
+- An $\texttt{R}$-package at GitHub: 
+  $$\texttt{straussR}$$
+  $$\textrm{Statistical Reanalysis under Selection for Significance}$$
+  $$\texttt{https://github.com/JonasMoss/straussR}$$
