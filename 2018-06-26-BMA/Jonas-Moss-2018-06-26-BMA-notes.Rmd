@@ -48,6 +48,13 @@ What the previous plot should have looked like
 * Use random effects normal-normal MA to get estimates.
 
 
+## The Effect Size Distribution in Psychology
+> Also as hypothesized, high-power poses caused a decrease in cortisol compared 
+> with low-power poses, which caused an increase in cortisol, F(1, 38) = 7.45, 
+> p < .02; r = .43 (Fig. 4)
+Carney, Cuddy, Yap (2010) - Power Posing: Brief Nonverbal Displays Affect 
+Neuroendocrine Levels and Risk Tolerance
+
 L. Bangert-Drowne, Hurley & Wilkinson (2004)
 ========================================================
 incremental: true

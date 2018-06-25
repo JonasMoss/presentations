@@ -10,9 +10,13 @@ output:
   beamer_presentation:
     fonttheme: "structurebold"
     colortheme: "spruce"
-    theme: "Boadilla"
+    theme: "default"
     template: mytemplate.tex
     incremental: true
+bibliography: Jonas-Moss-2018-06-26-BMA.bib
+nocite: | 
+  @hedges1984estimation, @motyl2017state, @lane1978estimating,
+  @bangert2004effects
 header-includes:
 - \usepackage{calligra}
 ---
@@ -20,7 +24,7 @@ header-includes:
 library("straussR")
 ```
 
-```{r setup, include = FALSE, cache = TRUE}
+```{r setup motyl, include = FALSE, cache = TRUE}
 library("straussR")
 motyl_between = dplyr::filter(motyl, design == "Between")
 motyl_between$M = 1/motyl_between$vi
@@ -28,20 +32,20 @@ motyl_between$M = 1/motyl_between$vi
 ## Meta-analysis for motyl_between
 motyl_data = data.frame(z = abs(motyl_between$z),
                   M = motyl_between$M,
-                  lower = qt(0.95, df = motyl_between$M),
-                  upper = qt(0.025, df = motyl_between$M),
+                  lower = qt(0.95, df = motyl_between$df.denominator),
+                  upper = qt(0.025, df = motyl_between$df.denominator),
                   dist_indices = rep(1, length(motyl_between$M)))
-motyl_data$lower[abs(motyl_between$z) > qt(0.975, df = motyl_between$M)] =
-  qt(0.95, df = motyl_between$M)
+motyl_data$lower[abs(motyl_between$z) > qt(0.975, df = motyl_between$df.denominator)] =
+  qt(0.975, df = motyl_between$df.denominator[abs(motyl_between$z) > qt(0.975, df = motyl_between$df.denominator)])
 motyl_data$dist_indices[abs(motyl_between$z) < motyl_data$lower] = 9
-motyl_data$dist_indices[abs(motyl_between$z) > qt(0.95, df = motyl_between$M)]
 motyl_data = dplyr::filter(motyl_data, M > 5)
 motyl_data$logn = as.vector(scale(log(motyl_data$M)))
 
 motyl_data_npb = motyl_data
 motyl_data_npb$dist_indices = 19
+```
 
-
+```{r setup motyl_pb, include = FALSE, cache = TRUE}
 straussR(formula = z ~ gumbel(mean ~ 1, sd ~ 1, p ~ 1),
          
          data = motyl_data,
@@ -54,7 +58,9 @@ straussR(formula = z ~ gumbel(mean ~ 1, sd ~ 1, p ~ 1),
          control = list(adapt_delta = 0.999,
                         max_treedepth = 10)) ->
   motylmod_gumbel
+```
 
+```{r setup motyl_npb, include = FALSE, cache = TRUE}
 straussR(formula = z ~ gumbel(mean ~ 1, sd  ~ 1),
          
          data = motyl_data_npb,
@@ -66,22 +72,6 @@ straussR(formula = z ~ gumbel(mean ~ 1, sd  ~ 1),
          control = list(adapt_delta = 0.999,
                         max_treedepth = 10)) ->
   motylmod_npb_gumbel
-
-# 
-# mean_npb = rstan::extract(motylmod_npb_gamma$stan_object)$beta_positive[ , 1]
-# sd_npb = rstan::extract(motylmod_npb_gamma$stan_object)$beta_positive[ , 2]
-# shape_npb = mean_npb^2/sd_npb^2
-# rate_npb = mean_npb/sd_npb^2
-# 
-# mean_pb = rstan::extract(motylmod_gamma$stan_object)$beta_positive[ , 1]
-# sd_pb = rstan::extract(motylmod_gamma$stan_object)$beta_positive[ , 2]
-# shape_pb = mean_pb^2/sd_pb^2
-# rate_pb = mean_pb/sd_pb^2
-# 
-# x = seq(0, 3, by = 0.005)
-# y_npb = sapply(x, function(x) mean(dgamma(x, shape_npb, rate_npb)))
-# y_pb = sapply(x, function(x) mean(dgamma(x, shape_pb, rate_pb)))
-
 ```
 
 ## This is What $p$-hacking Looks Like!
@@ -90,7 +80,8 @@ straussR(formula = z ~ gumbel(mean ~ 1, sd  ~ 1),
 suppressWarnings(plot(motyl_between$M, motyl_between$yi,
      ylab = expression(theta), cex.lab = 1.6, cex.lab = 1.6, xlab = "n", 
      log = "xy", bty = "l", pch = 20, 
-     sub = "Motyl et al. (2017): The state of social and personality science"))
+     sub = "Motyl et al. (2017): The state of social and personality science",
+     main = "Effects sizes from psychology"))
 lines(c(0.01, 1000), 1.96/sqrt(c(0.01, 1000)), col = "blue", lty = 2, lwd = 2)
 legend(x = "topright", col = c("black", "blue"), lty = c(NA, 2), cex = 1.6,
        legend = expression("Effect size from study", 1.96/sqrt(n)),
@@ -99,6 +90,8 @@ legend(x = "bottomleft", legend = "87% of results significant (n = 529)",
        bty = "n", cex = 1.6)
 
 ```
+
+# Motivation and Setup
 
 ## What is Classical Meta-analysis?
 - Studies $x_i$ are drawn according $x_{i} \sim N\left(\theta_{i},se_i\right)$
@@ -159,7 +152,7 @@ suppressWarnings(points(motyl_between$M, motyl_between$yi,
     - Can be caused by both *p*-hacking and publication bias.
 - How to account for selection for significance?
     - Use the random / fixed effects model with a truncated normal!
-    - Goes back to Hedges (1984), recently discussed by Gelman.
+    - Goes back to Hedges (1984); idea back to Lane & Dunlap (1978).
 - **Problem**: The first plot also contains studies that weren't affected by
   selection for significance!
 
@@ -190,9 +183,10 @@ legend(x = "bottomleft", legend = "87% of results significant (n = 529)",
 - Computationally feasible due to STAN.
 - On to examples!
 
-
+# Example I: Meta-analysis of a Field
 ## The Effect Size Distribution in Psychology
 
+- Data from [@motyl2017state]; same as in the plots.
 - **Likelihood:** $$p\left(x_{i}\mid\theta_{i},p\right)=p\phi_{\left(1.96\cdot se_{i},\infty\right)}^{f}\left(\theta_{i},se_{i}\right)+\left(1-p\right)\phi^{f}\left(\theta_{i},se_{i}\right)$$
     - Here $\phi^f$ is the *folded normal*, distribution of $|Z|$ where $Z$ is normal.
     - Used because the effect sizes have no inherent sign.
@@ -214,17 +208,11 @@ sd_npb = rstan::extract(motylmod_npb_gumbel$stan_object)$beta_positive
 mu_npb = to_mu(mean_npb, sd_npb)
 sigma_npb = to_sigma(sd_npb)
 
-#shape_npb = mean_npb^2/sd_npb^2
-#rate_npb = mean_npb/sd_npb^2
-
 mean_pb = rstan::extract(motylmod_gumbel$stan_object)$beta_unbounded
 sd_pb = rstan::extract(motylmod_gumbel$stan_object)$beta_positive
 
 mu_pb = to_mu(mean_pb, sd_pb)
 sigma_pb = to_sigma(sd_pb)
-
-#shape_pb = mean_pb^2/sd_pb^2
-#rate_pb = mean_pb/sd_pb^2
 
 x = seq(-1.2, 3, by = 0.005)
 y_npb = sapply(x, function(x) mean(extraDistr::dgumbel(x, mu_npb, sigma_npb)))
@@ -234,9 +222,9 @@ plot(x, y_npb, type = "l", lwd = 2, col = "black", bty = "l", cex.lab = 1.6, cex
      ylab = "Density")
 lines(x, y_pb, type = "l", lwd = 2, col = "red")
 legend("topright", col = c("red", "black", ""), lwd = c(2, 2, NA), bty = "n",
-       legend = c("Corrected (mean = 0.12)", 
+       legend = c("Corrected (mean = 0.18)", 
                   "Not corrected (mean = 0.58)",
-                  "Propensity to p-hack: 0.87 (0.02)"), cex = 1.7)
+                  "Propensity to p-hack: 0.92 (0.02)"), cex = 1.7)
 
 
 
@@ -265,7 +253,7 @@ rtruncfnorm = function(n, mean = 0, sd = 1, a = -Inf, b = Inf) {
     (1 - samples)
 }
 
-set.seed(100)
+set.seed(1337)
 N = nrow(motyl_data_npb)
 thetas = sample(rstan::extract(motylmod_gumbel$stan_object)$thetas_unbounded, N)
 probs = sample(rstan::extract(motylmod_gumbel$stan_object)$beta_unit, N)
@@ -278,7 +266,7 @@ vals = (1 - hacked)*straussR:::rfnorm(N, mean = thetas, sd = 1/sqrt(motyl_data_n
 ksp = suppressWarnings(ks.test(vals, motyl_data$z/sqrt(motyl_data$M))$p.value)
 plot(motyl_data_npb$M, motyl_data_npb$z/sqrt(motyl_data_npb$M), log = "xy", 
      pch = 20, bty = "l", cex.lab = 1.6, cex.lab = 1.6, xlab = "x",  col = "black", ylab = "Density",
-     sub = "Mean KS p-value: 0.3")
+     sub = "Mean KS p-value: 0.5")
 points(motyl_data_npb$M, vals, pch = 20, col = "red")
 ns = c(1, 1000)
 lines(ns, 1.96/sqrt(ns))
@@ -288,6 +276,7 @@ legend("bottomright", col = c("red", "black", NA), lwd = c(2, 2, NA), bty = "n",
 
 ```
 
+# Example II: Ordinary Meta-analysis
 ## Bangert-Drowns, Hurley & Wilkinson (2004)
 ```{r, echo = FALSE}
 data("dat.bangertdrowns2004", package = "metafor")
@@ -311,18 +300,6 @@ legend(x = "topright", col = c("black", "red", "black"), cex = 1.6,
                   expression(paste("1.96/", sqrt(n)))), bty = "n")
 
 ```
-
-## Questions for Bangert-Drowns, Hurley & Wilkinson
-- **Question I**: Are the **\textcolor{red}{red}** effects different from the **\textcolor{black}{black}** effects?
-    - Results from conventional random effects meta-analysis:
-        - Grand mean: 0.22 (p < 0.0001)
-        - \textcolor{red}{red mean} mean: 0.35 (p = 0.01)
-        - \textcolor{black}{black mean} mean: 0.12 (p = 0.03)
-    - But has the covariate itself been selected for significance?
-    
-- **Question II**: What is the effect size distribution?
-    - Fixed effects or random effects?
-    - Does *p*-hacking change the estimated effect sizes?
 
 ## Is there a difference between \textcolor{red}{red} and \textcolor{black}{black}?
 - Likelihood: $$p\left(x_{i}\mid\theta_{i},se_{i},p\right)=p\phi_{\left(1.96\cdot se_{i},\infty\right)}\left(\theta_{i},se_{i}\right)+\left(1-p\right)\phi\left(\theta_{i},se_{i}\right)$$
@@ -405,6 +382,7 @@ plot(x = ns,
 
 ```
 
+# Conclusion
 ## \textcalligra{The End}
 
 - *p*-hacking is everywhere and must be accounted for!
@@ -416,3 +394,5 @@ plot(x = ns,
   $$\texttt{straussR}$$
   $$\textrm{Statistical Reanalysis under Selection for Significance}$$
   $$\texttt{https://github.com/JonasMoss/straussR}$$
+  
+## References
