@@ -8,8 +8,6 @@ date: |
   | Nordstat 2018
 output:
   beamer_presentation:
-    fonttheme: "structurebold"
-    colortheme: "spruce"
     theme: "default"
     template: mytemplate.tex
     incremental: true

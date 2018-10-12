@@ -561,11 +561,14 @@ kolmogorov = function(x, y) {
   max(abs(z[c(which(diff(sort(x_and_y)) != 0), length_x + length_y)]))
 }
 
-kolmogorov_test = function(x, y) {
+kolmogorov = function(x, y, test = TRUE) {
   length_x = length(x)
   length_y = length(y)
   x_and_y = c(x, y)
   z = cumsum(ifelse(order(x_and_y) <= length_x, 1/length_x, -1/length_y))
   statistic = max(abs(z[c(which(diff(sort(x_and_y)) != 0), length_x + length_y)]))
-  1 - .Call(C_pSmirnov2x, statistic, length_x, length_y)
+  if(test) 1 - .Call(stats:::C_pSmirnov2x, statistic, length_x, length_y)
+  else statistic
 }
+
+kolmogorov(z1, z2, test = FALSE)
