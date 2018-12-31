@@ -1,0 +1,170 @@
+---
+title: "Habits"
+author: "John Doe"
+date: "March 22, 2005"
+output:
+  beamer_presentation:
+    fonttheme: "structurebold"
+    incremental: true
+---
+
+```{r setup, echo = TRUE}
+knitr::opts_chunk$set(cache = TRUE)
+
+```
+
+## This is what $p$-hacking looks like!
+- *p*-hacking is data snooping, fishing for significance, torture the data until
+  it confesses, etc.
+- From "Journal of Personality and Social Psychology"
+- All tests from four psychology journals, 2003 - 2004, 2013 - 2014
+- The values are undrstood as standardized mean differences
+  - Result of two-sample unpaired t-tests with assumed equal variance.
+- Which journals? 
+  - JPSP "Journal of Personality and Social Psychology"
+  - PSPB "Personality and Social Psychology Bulletin"
+  - JESP "Journal of Experimental Social Psychology"
+  - PS "Psychological Science"
+- Between study designs only
+
+Classical Meta-analysis
+========================================================
+- ##TODO## Add some facts
+
+
+What the previous plot should have looked like
+========================================================
+- Use random effects normal-normal MA to get estimates.
+
+Selection for Significance
+========================================================
+- Emphasized by Gelman in several publications
+- Lane & Dunlap (1978)- Estimating effect size: Bias resulting from the 
+  significance criterion in editorial decisions 
+- Hedges (1984) - Estimation of Effect Sizes Under Non-Nomal Sampling
+
+What the previous plot should have looked like
+========================================================
+* Use random effects normal-normal MA to get estimates.
+
+
+## The Effect Size Distribution in Psychology
+> Also as hypothesized, high-power poses caused a decrease in cortisol compared 
+> with low-power poses, which caused an increase in cortisol, F(1, 38) = 7.45, 
+> p < .02; r = .43 (Fig. 4)
+Carney, Cuddy, Yap (2010) - Power Posing: Brief Nonverbal Displays Affect 
+Neuroendocrine Levels and Risk Tolerance
+
+L. Bangert-Drowne, Hurley & Wilkinson (2004)
+========================================================
+incremental: true
+* From educational psychology.
+* Does writing tasks help with learning.
+* Meta-cognition singled out as significant in original meta-analysis.
+* Grand mean: 0.22
+* Red mean: 0.38
+* Black mean: 0.1
+
+Answering Question I: Is there a difference in correlations?
+========================================================
+incremental: true
+- Likelihood: $$p\left(x_{i}\mid\theta_{i},p\right)=pN_{|\geq\frac{1.96}{\sqrt{n_{i}}}}\left(\theta_{i},\frac{1}{\sqrt{n_{i}}}\right)+\left(1-p\right)N\left(\theta_{i},\frac{1}{\sqrt{n_{i}}}\right)$$
+- Effect size distribution: $$\theta_{i}\sim N(\theta+\gamma\textrm{Best?},\sigma)$$
+- Priors:
+  - $\theta\sim N\left(0,1\right)$
+  - $\gamma\sim N\left(0,1\right)$
+  - $\sigma\sim\textrm{Exp}\left(1\right)$
+- Propensity to p-hack: $p\sim\textrm{Uniform}$
+- Result:
+  - $E(\theta) = 0.11$
+  - $E(\gamma) = 0.001$
+- Will drop $\gamma$ from the model.
+
+Answering Question II: What is the effect size distribution?
+========================================================
+incremental: true
+- Logistic regression for the propensity to p-hack:
+$$\begin{eqnarray*}
+p & = & \textrm{logit}\left(p_{0}+p_{1}\log n\right)\\
+p_{0},p_{1} & \sim & N\left(0,1\right)
+\end{eqnarray*}$$
+- Fixed and random effects with equally good fit.
+  - Looking good visually.
+  - Matches the observed statistics $I^2$ and $Q$ well.
+  - Random effects: Mean $0.08 (0.07)$, standard deviation $0.14 (0.2)$
+  - Fixed effects: Mean $0.06 (0.07)$
+- Conclusion:
+  - Prefer the fixed effects model by Occam's razor.
+  - No evidence of a positive effect of the intervention.
+
+```{r echo = FALSE}
+theta0_pb = rstan::extract(AggAff_mixed_pb$stan_object)$beta_unbounded
+theta0_npb = rstan::extract(AggAff_mixed$stan_object)$beta_unbounded
+hist(x = theta0_npb, freq = FALSE, breaks = 50,
+     col = rgb(0, 0, 1, 1/4), xlim = c(0, 0.2),
+     main = expression(paste("Posteriors for ", theta[0])),
+     xlab = expression(theta),
+     ylab = "Density")
+hist(x = theta0_pb, freq = FALSE, breaks = 50,
+     col = rgb(1, 0, 1, 1/4), add = TRUE)
+legend("topleft", col = c(rgb(1, 0, 1, 1/4), rgb(0, 0, 1, 1/4)),
+       legend = c(paste0("With correction (mean = ",
+                         round(mean(theta0_pb), 3), ")"),
+                  paste0("Without correction (mean = ",
+                         round(mean(theta0_npb), 3), ")")),
+       lty = c(1, 1), lwd = c(2, 2), bty = "n")
+```
+
+Embrace Bayes I
+========================================================
+incremental: true
+- Use Bayes not only for fun, but out of necessity.
+- With 100% selection for significance, the standard mixed effects meta-analysis
+  is
+  $$\begin{eqnarray*}
+      \theta_{i} & \sim & N\left(\theta,\sigma^{2}\right)\\
+       x_{i} & \sim & N\mid_{\geq\frac{1.96}{\sqrt{n_{i}}}}\left(\theta_{i},1\right)
+     \end{eqnarray*} $$
+- *Big Problem I:* Has extremely flat likelihood. ML is out of the question.
+- *Big Problem II:* All confidence intervals for $\theta$ with non-zero coverage
+  can be infinitely large with positive probability. [Gleser & Hwang, 1987]
+
+Embrace Bayes II
+========================================================
+incremental: true
+- We need a form of regularization!
+  - Always reasonable informative priors on $\theta$ available, e.g. standard normal.
+  - Avoid non-informative priors. They misrepresent our situation.
+- Classical arguments:
+  - We can borrow strength from other meta-analyses in the same field.
+  - Allows us to update our believes coherently.
+
+Example: Measuring effect sizes in psychology
+========================================================
+incremental: true
+- Likelihood: $$p\left(x_{i}\mid\theta_{i},p\right)=p\cdot FoldedNormal_{|\geq\frac{1.96}{\sqrt{n_{i}}}}\left(\theta_{i},\frac{1}{\sqrt{n_{i}}}\right)+\left(1-p\right)FoldedNormal\left(\theta_{i},\frac{1}{\sqrt{n_{i}}}\right)$$
+- Effect size distribution: $$\theta_{i}\sim FoldedNormal(\xi,\sigma)$$
+- Priors:
+  - $\xi \sim\textrm{Exp}\left(1\right)$
+  - $\sigma\sim\textrm{Exp}\left(1\right)$
+  - $p\sim\textrm{Uniform}$
+- What are the the effect size distributions?
+  - Without correction: Expected mean $0.53$, expected sd $0.08$
+  - With correction: Expected mean $0.33$, expected sd $0.2$
+
+
+## Posterior Predictive Distributions
+- Negative values for $\theta$ increase the probability of observations close
+  to the cutoff.
+- This means that effect sizes are roughly equally distributed around 0, but
+  there is no tendency for them to go in the right direction!
+
+
+The End
+========================================================
+incremental: true
+- Publication bias can and should be modelled explicitly.
+- Such models should take selection for significance into account.
+- Such models should be Bayesian. If you do it with ML, you will fail.
+- Such models work well.
+- *WIP R-package:* github.com/JonasMoss/straussR
