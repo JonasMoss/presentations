@@ -1,0 +1,214 @@
+The Dao of Statistical Associations
+========================================================
+author: Jonas Moss
+date: 1/7/2019
+autosize: true
+width: 1366
+height: 768
+
+*One on tiptoe cannot stand; one whose legs are spread cannot walk.*
+
+
+Coefficient of Determination 
+========================================================
+incremental: true
+
+**Context:** Ordinary linear regression, try to generalize the $R^2$.
+
+- Population value: $R^2 = 1 - \frac{\sigma^2}{\sigma^2 + \textrm{Var}(\beta^tX)}$
+- Theoretical variant 1: $R^2 = 1 - \frac{\textrm{Var}(Y \mid X)}{\textrm{Var}(Y)}$
+- Theoretical variant 2: $R^2 = 1 - \frac{E\left(\textrm{Var}(Y \mid X)\right)}{\textrm{Var}(Y)}$
+- The last one is a number in $\left[0, 1\right]$, for any $L_2$ model.
+- This is a generalized $R^2$!
+- ... But is this the correct generalization?
+
+Risk Functions
+========================================================
+incremental: true
+
+- Well-known that $\textrm{Var}(Y) = \min_{\mu \in \mathbb{R}}{\textrm{E}\left(Y - \mu\right)^2}$
+- This is the risk associated with the quadratic loss, the risk is minized at the mean.
+- *Good property*: $R^2$ is associated with a point prediction.
+  - The point prediction is the argmin of the risk above. 
+  - It's *concrete*!
+  - Not unique. The LINEX loss gives the same risk, up to a constant.
+- Generalizes to multivariate $Y$ without any problems. 
+- **Question:** Why use the quadratic loss?
+   - *Answer:* Mathematical convenience.
+   - Wouldn't you prefer the absolute loss if God was willing to let you handle it?
+   
+Generalization with Risk function
+========================================================
+incremental: true
+
+### Definiton
+
+- Let $l\left(y, a\right)$ be a non-negative loss function, depending only on $Y$,
+  and $a \in \mathcal{A}$ an action.
+- The risk is $R(Y) = \min_{a\in\mathcal{A}}{\textrm{E}l\left(Y, a\right)}$
+- Generalized $R^2$: $r_Y(X) = 1 -  \frac{ER(Y \mid X)}{R(Y)}$ 
+
+### Example
+- Absolute value loss: $l\left(y, \mu\right) = |y - \mu|$, still OLS!
+- Generalized $R^2$: $r_Y(X) = 1 - \frac{\sigma}{\sqrt{\sigma^2 + \textrm{Var}(\beta^tX)}}$
+- Correlation is: $\sqrt{1 - \frac{\sigma^2}{\sigma^2 + \textrm{Var}(\beta^tX)}}$
+- R-squared is uniformly closer to $r_Y(X)$ than the correlation.
+
+Properties
+========================================================
+incremental: true
+
+Such measures have the following properties:
+
+1. $r_Y(X)\in \left[0, 1\right]$
+2. $r_Y(X) = 0$ when $X$ and $Y$ are independent.
+3. $r_Y(X) = 1$ when $Y$ is a deterministic function of $X$. 
+4. For all $Y,X,Z$, we have $r_Y(X, Z) \geq r_Y(X)$.
+
+The Changing Nature of Associations
+========================================================
+incremental: true
+
+- The correlation and $R^2$ are in $[0,1]$.
+- I believe this is *wrong* for two reasons: Interpretation and math.
+- **Proposal:** Work with the *gnosis*: $g_Y(X) = \frac{R(Y)}{E\left[R\left(Y \mid X\right)\right]}$
+- **Interpretation:** Knowing $X$ decreases the risk associated with $Y$ $g$-fold.
+  - Or I must divide my risk with $g$ if I dispose of $X$.
+  - When $R^2 = 0.5$, $g_Y(X) = 2$, $R^2 = 0.9$, $g_Y(X) = 10$.
+    $R^2 = 0.99$, $g_Y(X) = 100$
+  - *Benefit:* Captures changes close to $0,1$ much better than $R^2$!
+  - *Anecdotal evidence against correlation and R-squared*: Do you interpret a 
+    correlation of $0.2$ differently than an $R^2$ of $0.2$?
+    
+The Best Benefit
+========================================================    
+incremental: true
+
+- For the usual $R^2$, one is tempted to think in terms of variance decomposition.
+  - This does not generalize. 
+- Define the analogue of partial $R^2$: $g_Y(X \mid Z) = \frac{ER(Y \mid Z)}{ER(Y \mid X, Z)}$
+  - Then $g_{Y}\left(X\mid Z\right)g_{Y}\left(Z\right) = g_{Y}\left(X,Z\right)$
+  - Hence a *chain rule* holds for $g_Y(X)$.
+- General and correct way to think about decompositions. Is not unique. 
+- *Note:* The partial $g_Y(X \mid Z)$ are often illumintating, and suitable for e.g.
+  backward/forward selection of covariates. The succintly explain the significance
+  of each collection of variables given another collection. Their cousin partial 
+  $R^2$ are underused in my opinion.
+
+How to Use This
+========================================================  
+incremental: true
+
+### The Recipe
+1. Choose an action space and a loss function.
+2. Choose a *complete model*, that is, have a model for the covariates $X$ in addition
+   to $Y$.
+
+### Is there a Problem?
+* Statisticans often refuse to model $X$! But just do what you always do, 
+  assume normality.
+* We want a *value-neutral* loss function, one that is theoretically justified
+  as a good general and objective choice, so that we don't have to think about
+  the loss selection for ten hours.
+   
+Examples
+========================================================  
+incremental: true
+
+### Beta regression
+1. I'm boring but mathematically tractable. I choose the $L_2$ loss.
+2. Let $Y \mid X$ be a beta regression. Here $X$ are multivariate normal.
+3. Then, for each subset $X_I$ and $X_J$ og $X$, $g_Y(X_I \mid X_J)$ is complicated
+but computationally and mathematically tractable using Owen's $T$-function.
+
+### GLMM
+1. Again, I'm boring but mathematically tractable. I choose the $L_2$ loss.
+2. Let $Y \mid X, Z$ be a GLMM regression. Here $X$ are multivariate normal and 
+   $Z$ Bernoulli.
+3. Makes it possible to measure the importance of knowing class memberships. Is
+   tractable for most GLMMs. (I believe!)
+
+An almost-generalization: Dispersions
+========================================================  
+incremental: true
+- Think about the $R^2$ or $g$ with the standard deviation.
+- The standard deviation is an example of a *dispersion*, a function measuring
+  the amount of uncertainty in distribution in a hopefully value-neutral way.
+- Let $\|\cdot\|$ be a dispersion if:
+  1. *Non-negativity.* For any $X$, $\left\Vert X\right\Vert \geq0$,
+with equality if and only if $X$ is deterministic. 
+  2. *Absolute homogeneity.* For any $X$ and 
+  $\alpha\in\mathbb{R}$, $\left\Vert \alpha X\right\Vert =\left|\alpha\right|\left\Vert X\right\Vert$.
+  3. *Translation invariance.* If $x$ is a deterministic vector
+with the same dimension as $X$, $\left\Vert X+x\right\Vert =\left\Vert X\right\Vert .$
+  4. *Invariance under Invertible Transforms.* When $A$ is invertible,
+$\left\Vert AX\right\Vert = |\det{A}|\left\Vert X\right\Vert$.
+  5. *Projection property.* For all stochastic variables $Y$ and $X$, 
+    $E\left(\left\Vert Y \mid X\right\Vert \right)\leq\left\Vert Y\right\Vert$
+
+Gnosis through Dispersions
+========================================================  
+incremental: true
+- Define $h_Y(X \mid Z) = \frac{\| Y \mid Z\ |}{\| Y \mid X, Z \|}$
+- Has the same properties as $g$ above.
+- **Interpretation:** Knowing $X$ increases my *knowledge* about $Y$ $h$-fold.
+- Connections to risk associations:
+  - If the risk of a $g$ is absolutely homogeneuos, it is an $h$.
+  - $p$-homogeneuous risks can be transformed to dispersions by taking the $p$-th 
+    root, e.g. $\sqrt{(X - \mu)^2}$. 
+- The dispersion is unique up to a scaling constant for scale-families.
+- **Important:** Allows us to use the *differential entropy* and the *entropy*.
+
+Differential entropy
+========================================================  
+incremental: true
+- Definiton: $H\left(X\right)=-\int\log f\left(x\right)f\left(x\right)dx$.
+- Captures the degree of disinformation in a variable. Finite almost all variables, e.g. Cauchy.
+- $\|X\| = e^{H\left(X\right)}$ is a dispersion.
+- Seems to be the most *value-neutral* measure of information. 
+- The resulting $h$ conincides with the exponentiated mutual information;
+  hence it's defined even when the differential entropy is undefined.
+- The entropy is a $0$-homogenuous dispersion, and is the value-neutral measure
+for categorical data, e.g. probit regression.
+  
+Probit regression
+========================================================  
+incremental: true
+1. Choose the dispersion or loss function. I choose the entropy.
+2. Let $Y \mid X$ be a probit regression. Here $X$ are multivariate normal.
+
+Sadly I don't know a formula for the entropy, which requires the integral 
+$$\int\log\left[\Phi\left(x\right)\right]\phi\left(x,\mu\sigma^{2}\right)dx,$$
+but it can be computed numerically.
+
+An alternative is to go one step back and use the desired kind of $g$ or $h$
+on the latent normal. 
+
+Non-obvious (?) Applications
+========================================================  
+incremental: true
+- Forward selection using the measures. Preliminary results: **Promising**.
+- Measuring the importance of latent variables in non-regression context, e.g.
+   break-points. How much do we lose by not taking the breakpoint into account in
+   C.C. and Nils's war project? Does it actually matter?
+- Replacement for *p*-values? Use the partial $g_Y(X \mid Z)$.
+- Easier analysis of suppression problems, i.e. when $g_Y(X \mid Z) > g_Y(X)$.
+- Causal measures of association in all models. Just take the causal graph into 
+   account.
+   
+Why I Prefer the Standard Deviation to the Variance
+========================================================  
+- For a normal distribution, the standard deviation is more value-neutral than 
+  the variance.
+  - The quantiles are on the form $\mu + \sigma\Phi^-1(\alpha)$. 
+  - The exponentiated differential entropy is $\sqrt{2 \pi e}\sigma$. 
+  - It's the risk absolute value loss.
+  - It's the unique dispersion.
+- *The Question:* Should $g_Y(X) = \frac{\sigma(Y)}{\sigma(Y \mid X)}$ be promoted
+  in favour of $g_Y(X) = \frac{\textrm{Var}(Y)}{\textrm{Var}(Y \mid X)}$
+  
+Conclusion
+========================================================  
+1. There is a large class of generalizations of $R^2$ based on loss functions.
+2. There is a smaller class of almost-generalizations of $R^2$ based on dispersions.
+3. Measures of associations shouldn't be in $[0, 1]$.
