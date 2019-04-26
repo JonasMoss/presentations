@@ -1,0 +1,625 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+Definition
+\end_layout
+
+\begin_layout Standard
+Properties
+\end_layout
+
+\begin_layout Standard
+Application
+\end_layout
+
+\begin_layout Section
+Probit regression with log loss
+\end_layout
+
+\begin_layout Standard
+Probit regression with random intercept.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+p\left(y\mid x,c,t\right) & = & \phi\left(y,\beta x+\sum_{c'\in C}\alpha_{c'}1_{c'=c}+\sum_{t'\in T}\gamma_{t}1_{t'=t},\sigma_{y}^{2}\right)\\
+\\
+\alpha_{c} & \sim & N\left(\xi_{s\left(c\right)},\sigma_{C}^{2}\right)\\
+\xi_{s} & \sim & N\left(0,\sigma_{S}^{2}\right)\\
+\\
+p\left(x,c,t,s\right) & = & \textrm{Empirical distribution}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Here 
+\begin_inset Formula $s\left(c\right)$
+\end_inset
+
+ is the state of county 
+\begin_inset Formula $c$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+c &  & \textrm{county}\\
+t &  & \text{election year}\\
+x &  & \textrm{proportion white}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Note:
+\series default
+ The multilevel structure only matters for estimation, and has no direct
+ influence on the 
+\begin_inset Formula $R^{2}$
+\end_inset
+
+.
+ The parameter vectors are always assumed known.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+z_{ij} & = & \alpha+\beta X_{i}+\sum_{j=1}^{n}\gamma_{i}1_{J_{i}=j}+\epsilon_{i}\\
+\gamma_{i} & \sim & N\left(0,\sigma_{j}^{2}\right)
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+There are many 
+\begin_inset Formula $R^{2}$
+\end_inset
+
+s for this problem.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+1-\frac{E\left(R\left(Y\mid x,t,c\right)\right)}{R\left(Y\right)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+1-\frac{E\left(R\left(Y\mid x,t,s\right)\right)}{R\left(Y\right)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+1-\frac{E\left(R\left(Y\mid x,t,c\right)\right)}{R\left(Y\mid s\right)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+How much does the fixed effects explain when we know the random effects?
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+How much more do we know about the voting of a county if we know its white
+ percentage, provided we know both the year and the county?
+\end_layout
+
+\begin_layout Enumerate
+Knowing the random effects means that we know the index of 
+\begin_inset Formula $y$
+\end_inset
+
+: There is no inherent difference between fixe
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+How much does the random effects explain when we know the fixed effects?
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+Do we know more about the voting if we know the state, provided we know
+ the othe
+\end_layout
+
+\end_deeper
+\begin_layout Enumerate
+How much do they explain 
+\emph on
+together
+\emph default
+?
+\end_layout
+
+\begin_layout Standard
+All of these have two variants: One where the index 
+\begin_inset Formula $J$
+\end_inset
+
+ is known and one where it isn't.
+ These questions are non-trivially different.
+ [[Find a good data set!]]
+\end_layout
+
+\begin_layout Standard
+The effect of the fixed effects:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+1-\frac{E\left[\textrm{Ent}\left(Y\mid X,\gamma\right)\right]}{E\left[\textrm{Ent}\left(Y\mid\gamma\right)\right]}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The random effects:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+1-\frac{E\left[\textrm{Ent}\left(Y\mid\gamma,X\right)\right]}{E\left[\textrm{Ent}\left(Y\mid X\right)\right]}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Both effects:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+1-\frac{E\left[\textrm{Ent}\left(Y\mid\gamma,X\right)\right]}{\textrm{Ent}\left(Y\right)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Calculations
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\textrm{Ent}\left(Y\right)=-p_{1}\log p_{1}-p_{0}\log p_{0}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Time Series ANOVA
+\end_layout
+
+\begin_layout Standard
+Assume 
+\begin_inset Formula $X$
+\end_inset
+
+ is binary with 
+\begin_inset Formula $p\left(X=0\right)=\pi$
+\end_inset
+
+, 
+\begin_inset Formula $T$
+\end_inset
+
+ uniform on 
+\begin_inset Formula $[0,2\pi k]$
+\end_inset
+
+ for some positive integer 
+\begin_inset Formula $k$
+\end_inset
+
+, and
+\begin_inset Formula 
+\[
+p\left(y\mid x,t\right)=\alpha_{x}+\beta_{x}\textrm{cos}t+\sigma_{x}\epsilon
+\]
+
+\end_inset
+
+for a normal 
+\begin_inset Formula $\sigma_{x}$
+\end_inset
+
+.
+ Consider
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+R_{Y}\left(X\mid T=t\right) & = & 1-\frac{E\left[\textrm{Var}\left(Y\mid X,T=t\right)\right]}{\textrm{Var}\left(Y\mid T=t\right)}\\
+ & = & 1-\frac{\pi\sigma_{0}^{2}+\left(1-\pi\right)\sigma_{1}^{2}}{\pi\left(1-\pi\right)\left[\left(\alpha_{0}-\alpha_{1}\right)+\left(\beta_{0}-\beta_{1}\right)\cos t\right]^{2}+\pi\sigma_{0}^{2}+\left(1-\pi\right)\sigma_{1}^{2}}\\
+ & = & \frac{\left(\Delta_{\alpha}+\Delta_{\beta}\cos t\right)^{2}}{\left(\Delta_{\alpha}+\Delta_{\beta}\cos t\right)^{2}+\left(1-\pi\right)^{-1}\sigma_{0}^{2}+\pi^{-1}\sigma_{1}^{2}}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+.
+\end_layout
+
+\begin_layout Standard
+.
+\end_layout
+
+\begin_layout Standard
+.
+\end_layout
+
+\begin_layout Standard
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+R_{Y}\left(X\mid T\right)=1-\frac{E\textrm{Var}\left(Y\mid X,T\right)}{E\left[\textrm{Var}\left(Y\mid T\right)\right]}
+\]
+
+\end_inset
+
+Here 
+\begin_inset Formula 
+\[
+E\textrm{Var}\left(Y\mid X,T\right)=\pi\sigma_{0}^{2}+\left(1-\pi\right)\sigma_{1}^{2}
+\]
+
+\end_inset
+
+While 
+\begin_inset Formula 
+\begin{eqnarray*}
+E\left[\textrm{Var}\left(Y\mid T\right)\right] & = & E\left[\textrm{Var}\left(Y\mid X,T\right)\right]+\textrm{Var}\left[E\left(Y\mid X,T\right)\right]\\
+ & = & \pi\sigma_{0}^{2}+\left(1-\pi\right)\sigma_{1}^{2}+\textrm{Var}\left[E\left(Y\mid X,T\right)\right]
+\end{eqnarray*}
+
+\end_inset
+
+Since 
+\begin_inset Formula 
+\begin{eqnarray*}
+\textrm{Var}\left[E\left(Y\mid X,T\right)\right] & = & \textrm{Var}\left(\alpha_{X}+\beta_{X}\textrm{cos}T\right)\\
+ & = & E\left[\textrm{Var}\left(\alpha_{X}+\beta_{X}\textrm{cos}T\mid T\right)\right]+\textrm{Var}\left[E\left(\alpha_{X}+\beta_{X}\textrm{cos}T\mid T\right)\right]\\
+\\
+E\left[\textrm{Var}\left(\alpha_{X}+\beta_{X}\textrm{cos}T\mid T\right)\right] & = & \pi\left(1-\pi\right)E\left(\left[\left(\alpha_{0}-\alpha_{1}\right)+\left(\beta_{0}-\beta_{1}\right)\cos T\right]^{2}\right)\\
+ & = & \pi\left(1-\pi\right)\left[\frac{1}{2}\left(\beta_{0}-\beta_{1}\right)^{2}+\left(\alpha_{0}-\alpha_{1}\right)^{2}\right]\\
+\\
+\textrm{Var}\left[E\left(\alpha_{X}+\beta_{X}\textrm{cos}T\mid T\right)\right] & = & \left(\pi\beta_{0}+\left(1-\pi\right)\beta_{1}\right)^{2}\textrm{Var}\left(\cos T\right)\\
+ & = & \frac{1}{2}\left(\pi\beta_{0}+\left(1-\pi\right)\beta_{1}\right)^{2}
+\end{eqnarray*}
+
+\end_inset
+
+Thus
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+R_{Y}\left(X\mid T\right) & = & 1-\frac{\pi\sigma_{0}^{2}+\left(1-\pi\right)\sigma_{1}^{2}}{\pi\left(1-\pi\right)\left[\frac{1}{2}\left(\beta_{0}-\beta_{1}\right)^{2}+\left(\alpha_{0}-\alpha_{1}\right)^{2}\right]+\frac{1}{2}\left(\pi\beta_{0}+\left(1-\pi\right)\beta_{1}\right)^{2}+\pi\sigma_{0}^{2}+\left(1-\pi\right)\sigma_{1}^{2}}\\
+ & = & \frac{\left(1-\pi\right)\left[\frac{1}{2}\left(\beta_{0}-\beta_{1}\right)^{2}+\left(\alpha_{0}-\alpha_{1}\right)^{2}\right]+\frac{1}{2}\left(\pi\beta_{0}+\left(1-\pi\right)\beta_{1}\right)^{2}}{\pi\left(1-\pi\right)\left[\frac{1}{2}\left(\beta_{0}-\beta_{1}\right)^{2}+\left(\alpha_{0}-\alpha_{1}\right)^{2}\right]+\frac{1}{2}\left(\pi\beta_{0}+\left(1-\pi\right)\beta_{1}\right)^{2}+\pi\sigma_{0}^{2}+\left(1-\pi\right)}
+\end{eqnarray*}
+
+\end_inset
+
+Simpler:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+R_{Y}\left(X\mid T=t\right) & = & 1-\frac{E\left[\textrm{Var}\left(Y\mid X,T=t\right)\right]}{\textrm{Var}\left(Y\mid T=t\right)}\\
+ & = & 1-\frac{\pi\sigma_{0}^{2}+\left(1-\pi\right)\sigma_{1}^{2}}{\pi\left(1-\pi\right)\left[\left(\alpha_{0}-\alpha_{1}\right)+\left(\beta_{0}-\beta_{1}\right)\cos t\right]^{2}+\pi\sigma_{0}^{2}+\left(1-\pi\right)\sigma_{1}^{2}}\\
+ & = & \frac{\pi\left(1-\pi\right)\left[\left(\alpha_{0}-\alpha_{1}\right)+\left(\beta_{0}-\beta_{1}\right)\cos t\right]^{2}}{\pi\left(1-\pi\right)\left[\left(\alpha_{0}-\alpha_{1}\right)+\left(\beta_{0}-\beta_{1}\right)\cos t\right]^{2}+\pi\sigma_{0}^{2}+\left(1-\pi\right)\sigma_{1}^{2}}
+\end{eqnarray*}
+
+\end_inset
+
+Assume 
+\begin_inset Formula $\alpha_{0}=0$
+\end_inset
+
+ and 
+\begin_inset Formula $\beta_{0}=0$
+\end_inset
+
+.
+ Then, 
+\begin_inset Formula $\pi=\frac{1}{2}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\pi\left(1-\pi\right)\left[\left(\alpha_{0}-\alpha_{1}\right)+\left(\beta_{0}-\beta_{1}\right)\cos t\right]^{2}}{\pi\left(1-\pi\right)\left[\left(\alpha_{0}-\alpha_{1}\right)+\left(\beta_{0}-\beta_{1}\right)\cos t\right]^{2}+\pi\sigma_{0}^{2}+\left(1-\pi\right)\sigma_{1}^{2}}\\
+\frac{\left(\alpha_{1}+\beta_{1}\cos t\right)^{2}}{\left(\alpha_{1}+\beta_{1}\cos t\right)^{2}+2\left(\sigma_{0}^{2}+\sigma_{1}^{2}\right)}\\
+\frac{\left(1+\beta\cos t\right)^{2}}{\left(1+\beta\cos t\right)^{2}+\psi}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Old
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+\ensuremath{R_{Y}^{2}\left(X\right)} & = & 1-1/\left(1+\pi\left(1-\pi\right)\left(\frac{\mu_{u}-\mu_{l}}{\sigma}\right)^{2}\right)\\
+R_{Y}^{2}\left(X\right) & = & 1-1/\left(1+\frac{\pi\left(1-\pi\right)\left(\mu_{u}-\mu_{l}\right)^{2}}{\pi\sigma_{u}^{2}+\left(1-\pi\right)\sigma_{l}^{2}}\right)
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\ensuremath{g_{Y}(X)=1+\frac{\pi\left(1-\pi\right)\left(\mu_{u}-\mu_{l}\right)^{2}}{\pi\sigma_{u}^{2}+\left(1-\pi\right)\sigma_{l}^{2}}}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Example
+\end_layout
+
+\begin_layout Standard
+Assume 
+\begin_inset Formula $\pi=0.5$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+\mu_{\textrm{women}} & =\\
+\mu_{\textrm{menn}} & =\\
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Example
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+p\left(y\mid x=0\right) & = & f\left(y;\mu_{0},\sigma_{0}\right)\\
+p\left(y\mid x=1\right) & = & f\left(y;\mu_{1},\sigma_{1}\right)\\
+p\left(x=0\right) & = & \pi
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{E\left(\textrm{Var}\left(Y\mid X\right)\right)}{\textrm{Var}\left(Y\right)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+E\left(\textrm{Var}\left(Y\mid X\right)\right) & = & \pi\sigma_{0}^{2}+\left(1-\pi\right)\sigma_{1}^{2}\\
+\textrm{Var}\left(Y\right) & = & \pi\left(\mu_{0}^{2}+\sigma_{0}^{2}\right)+\left(1-\pi\right)\left(\mu_{1}^{2}+\sigma_{1}^{2}\right)-\left(\pi\mu_{0}+\left(1-\pi\right)\mu_{1}\right)^{2}\\
+ & = & \pi\left(1-\pi\right)\left(\mu_{u}-\mu_{l}\right)^{2}+\pi\sigma_{0}^{2}+\left(1-\pi\right)\sigma_{1}^{2}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{E\left(\textrm{Var}\left(Y\mid X\right)\right)}{\textrm{Var}\left(Y\right)}=\frac{\pi\sigma_{0}^{2}+\left(1-\pi\right)\sigma_{1}^{2}}{\pi\left(1-\pi\right)\left(\mu_{u}-\mu_{l}\right)^{2}+\pi\sigma_{0}^{2}+\left(1-\pi\right)\sigma_{1}^{2}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Association among exponentials.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\frac{E\left(\textrm{Var}\left(Y\mid X\right)\right)}{\textrm{Var}\left(Y\right)}=\frac{\sum_{i=1}^{n}\pi_{i}\lambda_{i}^{-2}}{\left(\sum_{i=1}^{n}\pi_{i}\lambda_{i}^{-2}\right)-\left(\sum_{i=1}^{n}\pi_{i}\lambda_{i}^{-1}\right)^{2}+\sum_{i=1}^{n}\pi_{i}\lambda_{i}^{-1}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Take the exponential.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{E\left(\textrm{Var}\left(Y\mid X\right)\right)}{\textrm{Var}\left(Y\right)} & = & \frac{\pi\lambda_{0}^{-2}+\left(1-\pi\right)\lambda_{1}^{-2}}{\pi\left(1-\pi\right)\left(\lambda_{0}^{-1}-\lambda_{1}^{-1}\right)^{2}+\pi\lambda_{0}^{-2}+\left(1-\pi\right)\lambda_{1}^{-2}}\\
+ & = & \frac{\pi\lambda_{1}^{2}+\left(1-\pi\right)\lambda_{0}^{2}}{\pi\left(1-\pi\right)\lambda_{0}^{2}\lambda_{1}^{2}\left(\lambda_{0}^{-1}-\lambda_{1}^{-1}\right)^{2}+\pi\lambda_{1}^{2}+\left(1-\pi\right)\lambda_{0}^{2}}\\
+ & = & \frac{\pi\lambda_{1}^{2}+\left(1-\pi\right)\lambda_{0}^{2}}{\pi\left(1-\pi\right)\left(\lambda_{0}-\lambda_{1}\right)^{2}+\pi\lambda_{1}^{2}+\left(1-\pi\right)\lambda_{0}^{2}}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+1-\frac{E\left(\textrm{Var}\left(Y\mid X\right)\right)}{\textrm{Var}\left(Y\right)}=\frac{\pi\left(1-\pi\right)\left(\lambda_{0}-\lambda_{1}\right)^{2}}{\pi\left(1-\pi\right)\left(\lambda_{0}-\lambda_{1}\right)^{2}+\pi\lambda_{1}^{2}+\left(1-\pi\right)\lambda_{0}^{2}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

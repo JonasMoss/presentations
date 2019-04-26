@@ -112,19 +112,7 @@ Small Worked Out Example, continued!
 ========================================================
 title: false
 incremental: true
-```{r, echo = FALSE}
-gnosis = function(pi, psi, sigma_u = 1, sigma_l = 1) {
-  1 + pi*(1 - pi)*psi^2/(pi*sigma_u^2 + (1 - pi)*sigma_l^2)
-}
-
-pi = 0.8
-psi = seq(-3, 3, by = 0.01)
-plot(psi, gnosis(pi, psi), type = "l", bty = "l", 
-     xlab = expression(psi), ylab = "Gnosis", lwd = 2)
-lines(psi, gnosis(pi, psi, 2, 2), col = "black", lty = 2, lwd = 2)
-lines(psi, gnosis(pi, psi, 1, 2), col = "blue", lwd = 2)
-lines(psi, gnosis(pi, psi, 2, 1), col = "red", lwd = 2)
-```
+![plot of chunk unnamed-chunk-1](association-figure/unnamed-chunk-1-1.png)
 
 - Define $\psi = \mu_{u}-\mu_{l}$, fix $\pi = 0.8$.
 - Solid black line: $\sigma_0 = 1 = \sigma_1 = 1$; dashed black line: $\sigma_0 = 1 = \sigma_1 = 1$.
