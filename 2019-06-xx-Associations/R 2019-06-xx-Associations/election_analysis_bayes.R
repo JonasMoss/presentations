@@ -14,6 +14,8 @@ state_index = data.frame(county = county_index,
   group_by(county) %>% 
   summarize(state = min(state)) %>%
   pull(state)
+states = unique(election$state)
+
 
 x = matrix(0, nrow = max(county_index), ncol = max(year_index))
 

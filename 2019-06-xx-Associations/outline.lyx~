@@ -99,29 +99,9 @@ Probit regression with random intercept.
 \begin_layout Standard
 \begin_inset Formula 
 \begin{eqnarray*}
-z & \sim & N\left(\alpha_{ij}+\beta x_{ijt}+\gamma_{t},1\right)\\
-y & = & 1_{z_{ijt}\geq0}\\
-\\
-\alpha_{ij} & \sim & N\left(\alpha_{j},\sigma_{\alpha_{j}}^{2}\right)\\
-\alpha_{j} & \sim & N\left(\alpha,\sigma_{\alpha}^{2}\right)\\
-\end{eqnarray*}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{eqnarray*}
-y\mid\alpha,\beta,\gamma,x,c,t & \sim & N\left(\beta x+\sum_{c'\in C}\alpha_{c'}1_{c'=c}+\sum_{t'\in T}\gamma_{t}1_{t'=t},\sigma_{y}^{2}\right)\\
-\\
+p\left(y\mid x,c,t\right) & = & \phi\left(y,\beta x+\sum_{c'\in C}\alpha_{c'}1_{c'=c}+\sum_{t'\in T}\gamma_{t}1_{t'=t},\sigma_{y}^{2}\right)\\
 \alpha_{c} & \sim & N\left(\xi_{s\left(c\right)},\sigma_{C}^{2}\right)\\
-\xi_{s} & \sim & N\left(0,\sigma_{S}^{2}\right)\\
-\\
-p\left(T=t\right) & = & \frac{1}{5}\\
-p\left(C=c\right) & = & \frac{1}{3113}\\
-p\left(x\mid c,t\right) & = & \textrm{Empirical distribution}
+\xi_{s} & \sim & N\left(0,\sigma_{S}^{2}\right)
 \end{eqnarray*}
 
 \end_inset
@@ -130,11 +110,24 @@ p\left(x\mid c,t\right) & = & \textrm{Empirical distribution}
 \end_layout
 
 \begin_layout Standard
+Here 
+\begin_inset Formula $s\left(c\right)$
+\end_inset
+
+ is the state of county 
+\begin_inset Formula $c$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
 \begin_inset Formula 
 \begin{eqnarray*}
-\alpha_{j} &  & \textrm{state effect}\\
-\text{\ensuremath{\gamma_{t}}} &  & \text{\textrm{time effect}}\\
-x_{ijt} &  & \textrm{proportion white}
+c &  & \textrm{county}\\
+t &  & \text{election year}\\
+x &  & \textrm{proportion white}
 \end{eqnarray*}
 
 \end_inset
@@ -143,15 +136,17 @@ x_{ijt} &  & \textrm{proportion white}
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula 
-\begin{eqnarray*}
-z_{ij} & = & \alpha+\beta X_{i}+\sum_{j=1}^{n}\gamma_{i}1_{J_{i}=j}+\epsilon_{i}\\
-\gamma_{i} & \sim & N\left(0,\sigma_{j}^{2}\right)
-\end{eqnarray*}
 
+\series bold
+Note:
+\series default
+ The multilevel structure only matters for estimation, and has no direct
+ influence on the 
+\begin_inset Formula $R^{2}$
 \end_inset
 
-
+.
+ The parameter vectors are always assumed known.
 \end_layout
 
 \begin_layout Standard
@@ -164,9 +159,133 @@ s for this problem.
 \end_layout
 
 \begin_layout Standard
+Classical 
+\begin_inset Formula $R^{2}$
+\end_inset
+
+, at the lowest level:
+\end_layout
+
+\begin_layout Standard
 \begin_inset Formula 
 \[
-1-\frac{E\left(R\left(Y\mid x,t,c\right)\right)}{R\left(Y\right)}
+1-\frac{E\left[R\left(Y\mid x,t,c\right)\right]}{R\left(Y\right)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $R^{2}$
+\end_inset
+
+ with state identity known but county identity unkown:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+1-\frac{E\left[R\left(Y\mid x,t,s\right)\right]}{R\left(Y\right)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Partial 
+\begin_inset Formula $R^{2}$
+\end_inset
+
+: How much risk is explained by the county when we know the state 
+\begin_inset Formula $s$
+\end_inset
+
+, percent white 
+\begin_inset Formula $w$
+\end_inset
+
+, and the county 
+\begin_inset Formula $c$
+\end_inset
+
+?
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+1-\frac{E\left[R\left(Y\mid x,t,c\right)\right]}{E\left[R\left(Y\mid x,t,s\right)\right]}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Partial 
+\begin_inset Formula $R^{2}$
+\end_inset
+
+: How much risk is explained by percent when county and year is known?
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+1-\frac{E\left[R\left(Y\mid x,t,c\right)\right]}{E\left[R\left(Y\mid t,c\right)\right]}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Calculations
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+E\left[\textrm{Var}\left(Y\mid t,c\right)\right] & = & E\left[\textrm{Var}\left(E\left(Y\mid x,c,t\right)\mid t,c\right)\right]+E\left(E\left[\textrm{Var}\left(Y\mid x,c,t\right)\mid t,c\right]\right)\\
+ & = & E\left[\textrm{Var}\left(\beta x\mid t,c\right)\right]+\sigma_{y}^{2}\\
+ & = & \beta^{2}E\left[\textrm{Var}\left(x\mid t,c\right)\right]+\sigma_{y}^{2}
+\end{eqnarray*}
+
+\end_inset
+
+Problem: 
+\begin_inset Formula $E\left[\textrm{Var}\left(x\mid t,c\right)\right]=0$
+\end_inset
+
+ under the empirical model.
+\end_layout
+
+\begin_layout Standard
+Two solutions:
+\end_layout
+
+\begin_layout Enumerate
+Invent a model for 
+\begin_inset Formula $x\sim t,c$
+\end_inset
+
+ and estimate its parameters.
+\end_layout
+
+\begin_layout Enumerate
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\textrm{Var}\left(Y\right)=\sigma_{y}^{2}+\textrm{Var}\left[E\left(Y\mid x,t,s\right)\right]
 \]
 
 \end_inset
@@ -176,9 +295,9 @@ s for this problem.
 
 \begin_layout Standard
 \begin_inset Formula 
-\[
-1-\frac{E\left(R\left(Y\mid x,t,s\right)\right)}{R\left(Y\right)}
-\]
+\begin{eqnarray*}
+1-\frac{E\left(R\left(Y\mid x,t,s\right)\right)}{R\left(Y\right)} & = & 1-\frac{\sigma_{y}^{2}}{\sigma_{y}^{2}+\theta^{T}\Sigma\theta}
+\end{eqnarray*}
 
 \end_inset
 
@@ -188,12 +307,74 @@ s for this problem.
 \begin_layout Standard
 \begin_inset Formula 
 \[
-1-\frac{E\left(R\left(Y\mid x,t,c\right)\right)}{R\left(Y\mid s\right)}
+\theta^{T}\Sigma\theta=\left(L\theta\right)^{T}L\theta
 \]
 
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+We need the covariance 
+\begin_inset Formula $\Sigma_{x,t,s}$
+\end_inset
+
+.
+ And 
+\begin_inset Formula $\theta_{c\in S}$
+\end_inset
+
+.
+ 
+\begin_inset Formula $\Sigma_{x,t,s}$
+\end_inset
+
+ requires separate modeling of 
+\begin_inset Formula $p\left(c\mid x,t\right)$
+\end_inset
+
+.
+ [Maybe counterfactually? Should be independent.]
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+p\left(c,x,t,s\right)=\frac{1}{200}\frac{1}{\left|c\right|}1_{c\in s}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+\textrm{Var}\left(Y\mid x,t,s\right) & = & E\left[\textrm{Var}\left(Y\mid x,t,c\right)\mid x,t,s\right]+\textrm{Var}\left[E\left(Y\mid x,t,c\right)\mid x,t,s\right]\\
+ & = & \sigma_{y}^{2}+\textrm{Var}\left[E\left(Y\mid x,t,c\right)\mid x,t,s\right]\\
+ & = & \sigma_{y}^{2}+\theta_{c\in s}^{T}\theta_{c\in s}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+1-\frac{E\left(R\left(Y\mid x,t,s\right)\right)}{R\left(Y\right)}=
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Rest
 \end_layout
 
 \begin_layout Enumerate

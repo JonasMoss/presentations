@@ -55,3 +55,6 @@ values = colMeans(extract(samples)$zeta)
 names(values) = unique(election$state)
 
 hist(log(election$democrat_percent))
+
+mod = lm(democrat_percent ~ 1 + year + white + county_id, 
+           data = election)
